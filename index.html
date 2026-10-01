@@ -1,0 +1,2190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GH Studio - Sistema de Gestão Financeira e Operacional para Estúdio de Tatuagem">
+    <title>GH Studio | Gestão do Estúdio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+    <!-- jsPDF for reports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <!-- QRCode for mobile device pairing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="styles.css?v=3.1">
+</head>
+<body>
+    <!-- ===== SIDEBAR (Desktop) ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="assets/logo.jpg" alt="GH Studio" class="logo-img">
+                <span class="logo-text">Studio</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-page="dashboard" id="nav-dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+                <span>Dashboard</span>
+            </button>
+            <button class="nav-item" data-page="agenda" id="nav-agenda">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>Agenda</span>
+            </button>
+            <button class="nav-item" data-page="financeiro" id="nav-financeiro">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+                <span>Financeiro</span>
+            </button>
+            <button class="nav-item" data-page="clientes" id="nav-clientes">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>Clientes</span>
+            </button>
+            <button class="nav-item" data-page="galeria" id="nav-galeria">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <span>Galeria</span>
+            </button>
+            <button class="nav-item" data-page="estoque" id="nav-estoque">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                </svg>
+                <span>Estoque</span>
+                <span class="nav-badge" id="inventoryAlertBadge" style="display:none; background:#EF4444; color:#fff;">0</span>
+            </button>
+            <button class="nav-item" data-page="whatsapp" id="nav-whatsapp">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                </svg>
+                <span>WhatsApp</span>
+                <span class="nav-badge" id="whatsappPendingBadge" style="display:none;">0</span>
+            </button>
+            <button class="nav-item nav-item-cloud" id="nav-connect-mobile" title="Conectar Celular / Tablet via QR Code">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                    <line x1="12" y1="18" x2="12.01" y2="18"/>
+                </svg>
+                <span>Conectar Celular</span>
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar-wrap" id="userAvatarWrap" title="Clique para alterar foto de perfil">
+                    <div class="user-avatar" id="userAvatar">G</div>
+                    <button type="button" class="btn-avatar-edit" id="btnEditAvatar" title="Mudar foto de perfil">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </button>
+                    <input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
+                </div>
+                <div class="user-info">
+                    <span class="user-name" id="userName">Carregando...</span>
+                    <span class="user-role">Tatuador</span>
+                </div>
+                <div class="user-actions" style="margin-left:auto; display:flex; gap:6px;">
+                    <button class="btn-icon" id="btnLogout" title="Sair">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <button class="menu-toggle" id="menuToggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            <div class="top-bar-title">
+                <h1 id="pageTitle">Dashboard</h1>
+                <span class="top-bar-date" id="currentDate"></span>
+            </div>
+            <div class="top-bar-actions">
+                <button class="btn-topbar-calc" id="btnAbrirCalculadora" title="Calculadora Inteligente de Orçamento de Tattoo" onclick="if(window.TattooCalculator) TattooCalculator.openModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;">
+                        <rect x="4" y="2" width="16" height="20" rx="2"/>
+                        <line x1="8" y1="6" x2="16" y2="6"/>
+                        <line x1="16" y1="14" x2="16" y2="18"/>
+                        <path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/>
+                        <path d="M12 14h.01"/><path d="M8 14h.01"/>
+                        <path d="M12 18h.01"/><path d="M8 18h.01"/>
+                    </svg>
+                    <span>Orçar Tattoo</span>
+                </button>
+                <button class="btn-cloud-status" id="btnCloudStatus" title="Status da Nuvem & Conectar Celular">
+                    <span class="cloud-dot online" id="cloudStatusDot"></span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;">
+                        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                    </svg>
+                    <span id="cloudStatusLabel">Nuvem Conectada</span>
+                </button>
+                <button class="btn-icon" id="btnNotifications" onclick="window.toggleNotifications(event)" title="Notificações">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
+                </button>
+                <div class="notifications-dropdown" id="notificationsDropdown"></div>
+            </div>
+        </header>
+
+        <!-- ===== PAGE: DASHBOARD ===== -->
+        <section class="page active" id="page-dashboard">
+            <!-- Seletor de Mês dos Indicadores de Faturamento -->
+            <div class="dashboard-month-bar glass-card">
+                <div class="dmb-info">
+                    <div class="dmb-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                    <div class="dmb-text">
+                        <span class="dmb-sub">PERÍODO DOS INDICADORES</span>
+                        <div class="dmb-heading-wrap">
+                            <h2 class="dmb-title" id="dashMonthLabel">Carregando mês...</h2>
+                            <span class="dmb-badge" id="dashMonthBadge">Mês Atual</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dmb-controls">
+                    <button type="button" class="btn-icon" id="btnPrevDashMonth" title="Mês Anterior">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <div class="dmb-picker-btn-wrap">
+                        <button type="button" class="btn-secondary btn-sm" id="btnChooseDashMonth" title="Escolher mês específico no calendário">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:6px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span>Escolher Mês</span>
+                        </button>
+                        <input type="month" id="dashMonthInput" class="dmb-hidden-picker" title="Selecione o mês desejado">
+                    </div>
+                    <button type="button" class="btn-icon" id="btnNextDashMonth" title="Próximo Mês">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                    <button type="button" class="chip active" id="btnTodayDashMonth" style="margin-left:4px; font-size:0.75rem; padding:6px 14px; cursor:pointer;" title="Voltar para o mês atual">Mês Atual</button>
+                </div>
+            </div>
+
+            <!-- Barra de Meta Mensal de Faturamento -->
+            <div class="meta-mensal-card glass-card">
+                <div class="meta-header">
+                    <div class="meta-title-wrap">
+                        <div class="meta-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <circle cx="12" cy="12" r="6"/>
+                                <circle cx="12" cy="12" r="2"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="meta-badge-tag">PLANEJAMENTO & METAS</span>
+                            <h2 class="meta-title">Meta de Faturamento — <span id="metaMesAtual">Carregando...</span></h2>
+                        </div>
+                    </div>
+                    <div class="meta-header-actions">
+                        <span class="meta-pill" id="metaPercentBadge">0% da meta</span>
+                        <button type="button" class="btn-secondary btn-sm" id="btnDefinirMeta" title="Estipular ou alterar meta financeira do mês">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:6px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            <span>Estipular Meta</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="meta-body">
+                    <div class="meta-numbers">
+                        <div class="meta-num-item">
+                            <span class="meta-num-label">Faturamento do Mês</span>
+                            <span class="meta-num-val val-green" id="metaValRealizado">R$ 0,00</span>
+                        </div>
+                        <div class="meta-num-item">
+                            <span class="meta-num-label">Meta Estipulada</span>
+                            <span class="meta-num-val val-gold" id="metaValObjetivo">R$ 10.000,00</span>
+                        </div>
+                        <div class="meta-num-item">
+                            <span class="meta-num-label" id="metaStatusLabel">Faltam para a Meta</span>
+                            <span class="meta-num-val" id="metaValRestante">R$ 10.000,00</span>
+                        </div>
+                    </div>
+                    <div class="meta-progress-track">
+                        <div class="meta-progress-fill" id="metaProgressBar" style="width: 0%;">
+                            <span class="meta-progress-glow"></span>
+                        </div>
+                        <div class="meta-markers">
+                            <span class="meta-marker" style="left: 25%;">25%</span>
+                            <span class="meta-marker" style="left: 50%;">50%</span>
+                            <span class="meta-marker" style="left: 75%;">75%</span>
+                            <span class="meta-marker" style="left: 100%;">100% 🎯</span>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span id="metaDiasRestantesText">🗓️ Carregando projeção do mês...</span>
+                        <span id="metaRitmoDiarioText">⚡ Ritmo necessário: R$ 0,00 / dia</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Summary Cards -->
+            <div class="cards-grid">
+                <div class="summary-card" id="card-faturamento">
+                    <div class="card-icon card-icon--green">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                            <polyline points="17 6 23 6 23 12"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-label" id="labelFaturamento">Faturamento do Mês</span>
+                        <span class="card-value" id="valFaturamento">R$ 0,00</span>
+                        <span class="card-trend" id="trendFaturamento">Sem movimentações</span>
+                    </div>
+                </div>
+                <div class="summary-card" id="card-despesas">
+                    <div class="card-icon card-icon--red">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+                            <polyline points="17 18 23 18 23 12"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-label" id="labelDespesas">Despesas do Mês</span>
+                        <span class="card-value" id="valDespesas">R$ 0,00</span>
+                        <span class="card-trend" id="trendDespesas">Sem despesas</span>
+                    </div>
+                </div>
+                <div class="summary-card" id="card-lucro">
+                    <div class="card-icon card-icon--yellow">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"/>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-label" id="labelLucro">Lucro Líquido do Mês</span>
+                        <span class="card-value" id="valLucro">R$ 0,00</span>
+                        <span class="card-trend" id="trendLucro">Sem saldo apurado</span>
+                    </div>
+                </div>
+                <div class="summary-card" id="card-receber">
+                    <div class="card-icon card-icon--orange">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-label">Valores a Receber</span>
+                        <span class="card-value" id="valReceber">R$ 0,00</span>
+                        <span class="card-trend" id="trendReceber">0 clientes pendentes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts & Appointments -->
+            <div class="dashboard-grid">
+                <div class="chart-container glass-card">
+                    <div class="chart-header">
+                        <h2>Evolução Financeira</h2>
+                        <div class="chart-filters">
+                            <button class="chip active" data-period="6m">6 meses</button>
+                            <button class="chip" data-period="12m">12 meses</button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartFinanceiro"></canvas>
+                    </div>
+                </div>
+                <div class="appointments-container glass-card">
+                    <div class="section-header">
+                        <h2>Próximos Agendamentos</h2>
+                        <button class="btn-link" id="btnVerAgenda">Ver todos →</button>
+                    </div>
+                    <div class="appointments-list" id="appointmentsList">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="recent-transactions glass-card">
+                <div class="section-header">
+                    <h2>Transações Recentes</h2>
+                    <button class="btn-link" id="btnVerFinanceiro">Ver todas →</button>
+                </div>
+                <div class="transactions-table-wrapper">
+                    <table class="transactions-table" id="recentTransactionsTable">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Tipo</th>
+                                <th>Valor</th>
+                                <th>Método</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentTransactionsBody">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== PAGE: AGENDA ===== -->
+        <section class="page" id="page-agenda">
+            <div class="agenda-controls">
+                <div class="agenda-nav">
+                    <button class="btn-icon" id="btnPrevWeek" title="Semana Anterior">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <h2 id="agendaWeekLabel">Carregando semana...</h2>
+                    <button class="btn-icon" id="btnNextWeek" title="Próxima Semana">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                    <button type="button" class="chip" id="btnTodayWeek" style="margin-left:6px; font-size:0.75rem; padding:4px 10px; cursor:pointer;" title="Ir para a semana atual">Hoje</button>
+                </div>
+                <div class="agenda-actions">
+                    <div class="agenda-view-toggle">
+                        <button class="chip active" data-view="week" id="btnViewWeek">Semana</button>
+                        <button class="chip" data-view="list" id="btnViewList">Lista</button>
+                    </div>
+                    <button class="btn-primary" id="btnNovoAgendamento">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>Novo Agendamento</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Week View -->
+            <div class="week-view glass-card" id="weekView">
+                <div class="week-grid" id="weekGrid">
+                    <!-- Dynamic week days -->
+                </div>
+            </div>
+
+            <!-- List View (hidden by default) -->
+            <div class="list-view glass-card" id="listView" style="display:none;">
+                <div class="agenda-list" id="agendaList">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== PAGE: FINANCEIRO ===== -->
+        <section class="page" id="page-financeiro">
+            <!-- Financial Tabs -->
+            <div class="fin-tabs">
+                <button class="fin-tab active" data-tab="transacoes" id="tabTransacoes">Transações</button>
+                <button class="fin-tab" data-tab="sinais" id="tabSinais">Sinais / Adiantamentos</button>
+                <button class="fin-tab" data-tab="despesas" id="tabDespesas">Despesas</button>
+                <button class="fin-tab" data-tab="receber" id="tabReceber">Valores a Receber</button>
+            </div>
+
+            <!-- Filters -->
+            <div class="fin-filters">
+                <div class="filter-group">
+                    <label>Período:</label>
+                    <input type="date" id="filterDateFrom" class="input-field" title="Data inicial">
+                    <span>até</span>
+                    <input type="date" id="filterDateTo" class="input-field" title="Data final">
+                </div>
+                <div class="fin-filter-chips" id="finPeriodChips">
+                    <button type="button" class="chip" data-period="mes">Este Mês</button>
+                    <button type="button" class="chip" data-period="30d">Últimos 30d</button>
+                    <button type="button" class="chip" data-period="ano">Este Ano</button>
+                </div>
+                <div class="filter-group">
+                    <label>Pagamento:</label>
+                    <select id="filterPayment" class="input-field">
+                        <option value="todos">Todos os Métodos</option>
+                        <option value="pix">PIX</option>
+                        <option value="credito">Cartão de Crédito</option>
+                        <option value="debito">Cartão de Débito</option>
+                        <option value="dinheiro">Dinheiro</option>
+                    </select>
+                </div>
+                <button class="btn-primary" id="btnFiltrar" style="padding: 9px 16px; font-size: 0.85rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    Filtrar
+                </button>
+                <button type="button" class="btn-secondary" id="btnClearFilter" style="padding: 9px 14px; font-size: 0.85rem;" title="Limpar todos os filtros">Limpar</button>
+            </div>
+
+            <!-- Tab: Transações -->
+            <div class="fin-panel active" id="panel-transacoes">
+                <div class="glass-card">
+                    <div class="section-header">
+                        <h2>Todas as Transações</h2>
+                        <div class="fin-header-actions" style="display:flex; align-items:center; gap:10px;">
+                            <button class="btn-export" id="btnExportPDF">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                <span>Exportar PDF</span>
+                            </button>
+                            <button class="btn-primary" id="btnNovaTransacao">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                <span>Nova Transação</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="transactions-table-wrapper">
+                        <table class="transactions-table" id="allTransactionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Descrição</th>
+                                    <th>Cliente</th>
+                                    <th>Tipo</th>
+                                    <th>Valor</th>
+                                    <th>Método</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allTransactionsBody">
+                                <!-- Dynamic -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Sinais -->
+            <div class="fin-panel" id="panel-sinais">
+                <div class="glass-card">
+                    <div class="section-header">
+                        <h2>Sinais e Adiantamentos</h2>
+                        <button class="btn-primary" id="btnAddSinal">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Registrar Sinal
+                        </button>
+                    </div>
+                    <div class="sinais-grid" id="sinaisGrid">
+                        <!-- Dynamic -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Despesas -->
+            <div class="fin-panel" id="panel-despesas">
+                <div class="glass-card">
+                    <div class="section-header">
+                        <h2>Despesas do Estúdio</h2>
+                        <button class="btn-primary" id="btnAddDespesa">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Nova Despesa
+                        </button>
+                    </div>
+                    <div class="despesas-summary" id="despesasSummary">
+                        <!-- Dynamic summary cards -->
+                    </div>
+                    <div class="transactions-table-wrapper">
+                        <table class="transactions-table" id="despesasTable">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Descrição</th>
+                                    <th>Categoria</th>
+                                    <th>Valor</th>
+                                    <th>Método</th>
+                                </tr>
+                            </thead>
+                            <tbody id="despesasBody">
+                                <!-- Dynamic -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Valores a Receber -->
+            <div class="fin-panel" id="panel-receber">
+                <div class="glass-card">
+                    <div class="section-header">
+                        <h2>Valores a Receber</h2>
+                        <button class="btn-primary" id="btnNovoValorReceber" style="font-size:0.85rem; padding:8px 14px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;margin-right:4px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span>Novo Valor a Receber</span>
+                        </button>
+                    </div>
+                    <div class="receber-list" id="receberList">
+                        <!-- Dynamic -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== PAGE: CLIENTES ===== -->
+        <section class="page" id="page-clientes">
+            <div class="clientes-header">
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" placeholder="Buscar cliente..." id="searchClientes" class="input-field">
+                </div>
+                <button class="btn-primary" id="btnAddCliente">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Novo Cliente
+                </button>
+            </div>
+            <div class="clientes-grid" id="clientesGrid">
+                <!-- Dynamic -->
+            </div>
+        </section>
+
+        <!-- ===== PAGE: GALERIA / PORTFÓLIO ===== -->
+        <section class="page" id="page-galeria">
+            <div class="galeria-header-wrapper">
+                <div class="galeria-title-row">
+                    <div>
+                        <h2>Portfólio & Galeria de Trabalhos</h2>
+                        <p class="section-subtitle">Exibição de obras concluídas pelo GH Studio com filtros por estilo técnico e cliente.</p>
+                    </div>
+                    <button class="btn-primary" id="btnAddGaleria">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>Novo Trabalho</span>
+                    </button>
+                </div>
+                <div class="galeria-controls">
+                    <div class="style-filter-chips" id="galeriaFilterChips">
+                        <button class="filter-chip active" data-style="todos">Todos</button>
+                        <button class="filter-chip" data-style="blackwork">Blackwork</button>
+                        <button class="filter-chip" data-style="fineline">Fine Line</button>
+                        <button class="filter-chip" data-style="realismo">Realismo</button>
+                        <button class="filter-chip" data-style="oriental">Oriental</button>
+                        <button class="filter-chip" data-style="oldschool">Old School</button>
+                        <button class="filter-chip" data-style="aquarela">Aquarela</button>
+                    </div>
+                    <div class="search-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" placeholder="Buscar trabalho ou cliente..." id="searchGaleria" class="input-field">
+                    </div>
+                </div>
+            </div>
+            <div class="galeria-grid" id="galeriaGrid">
+                <!-- Dynamically rendered -->
+            </div>
+        </section>
+
+        <!-- ===== PAGE: CENTRAL WHATSAPP ===== -->
+        <section class="page" id="page-whatsapp">
+            <div class="wa-hub-header glass-card">
+                <div class="wa-hub-title-row">
+                    <div style="display:flex; align-items:center; gap:14px;">
+                        <div class="wa-icon-large">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>Central de Comunicação WhatsApp</h2>
+                            <p class="section-subtitle">Dispare lembretes inteligentes de sinais, confirmações de sessão, follow-ups de orçamento e cuidados pós-tattoo com 1 clique.</p>
+                        </div>
+                    </div>
+                    <div class="wa-header-actions">
+                        <button type="button" class="btn-primary" onclick="WhatsAppService.openNovoOrcamentoModal()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;margin-right:6px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span>Novo Follow-up de Orçamento</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- WhatsApp Summary Cards -->
+                <div class="wa-summary-metrics">
+                    <div class="wa-metric-card" onclick="WhatsAppService.switchTab('sinais')">
+                        <span class="wa-metric-num val-yellow" id="waStatSinais">0</span>
+                        <span class="wa-metric-label">Sinais Pendentes</span>
+                    </div>
+                    <div class="wa-metric-card" onclick="WhatsAppService.switchTab('sessoes')">
+                        <span class="wa-metric-num val-green" id="waStatSessoes">0</span>
+                        <span class="wa-metric-label">Sessões Marcadas</span>
+                    </div>
+                    <div class="wa-metric-card" onclick="WhatsAppService.switchTab('orcamentos')">
+                        <span class="wa-metric-num val-blue" id="waStatOrcamentos">0</span>
+                        <span class="wa-metric-label">Orçamentos em Aberto</span>
+                    </div>
+                    <div class="wa-metric-card" onclick="WhatsAppService.switchTab('receber')">
+                        <span class="wa-metric-num val-red" id="waStatReceber">0</span>
+                        <span class="wa-metric-label">Saldos a Receber</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WhatsApp Navigation Tabs -->
+            <div class="wa-tabs">
+                <button type="button" class="wa-tab active" data-watab="sinais" id="tabWaSinais" onclick="WhatsAppService.switchTab('sinais')">⏳ Sinais Pendentes</button>
+                <button type="button" class="wa-tab" data-watab="sessoes" id="tabWaSessoes" onclick="WhatsAppService.switchTab('sessoes')">📅 Sessões Marcadas</button>
+                <button type="button" class="wa-tab" data-watab="orcamentos" id="tabWaOrcamentos" onclick="WhatsAppService.switchTab('orcamentos')">💬 Orçamentos & Follow-up</button>
+                <button type="button" class="wa-tab" data-watab="receber" id="tabWaReceber" onclick="WhatsAppService.switchTab('receber')">💰 Valores a Receber</button>
+                <button type="button" class="wa-tab" data-watab="cuidados" id="tabWaCuidados" onclick="WhatsAppService.switchTab('cuidados')">🖤 Cuidados Pós-Tattoo</button>
+                <button type="button" class="wa-tab" data-watab="config" id="tabWaConfig" onclick="WhatsAppService.switchTab('config')">⚙️ Configurações & PIX</button>
+            </div>
+
+            <!-- Tab Panels -->
+            <div class="wa-panel active" id="panel-wa-sinais">
+                <div class="glass-card">
+                    <div class="section-header">
+                        <div>
+                            <h3>Lembretes de Sinais Pendentes</h3>
+                            <p style="font-size:0.8rem; color:var(--text-tertiary);">Clientes com sessões agendadas ou sinais com pagamento pendente.</p>
+                        </div>
+                    </div>
+                    <div class="wa-cards-list" id="waListSinais"></div>
+                </div>
+            </div>
+
+            <div class="wa-panel" id="panel-wa-sessoes">
+                <div class="glass-card">
+                    <div class="section-header">
+                        <div>
+                            <h3>Confirmação de Sessões Marcadas</h3>
+                            <p style="font-size:0.8rem; color:var(--text-tertiary);">Envie a confirmação com data, horário e orientações de preparo.</p>
+                        </div>
+                    </div>
+                    <div class="wa-cards-list" id="waListSessoes"></div>
+                </div>
+            </div>
+
+            <div class="wa-panel" id="panel-wa-orcamentos">
+                <div class="glass-card">
+                    <div class="section-header">
+                        <div>
+                            <h3>Acompanhamento de Orçamentos (Follow-up)</h3>
+                            <p style="font-size:0.8rem; color:var(--text-tertiary);">Reative conversas com clientes que pediram orçamento e ainda não fecharam data.</p>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button type="button" class="btn-secondary btn-sm" onclick="window.TattooCalculator.openModal()" style="display:inline-flex; align-items:center; gap:6px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+                                <span>Calculadora de Preço</span>
+                            </button>
+                            <button type="button" class="btn-primary btn-sm" onclick="WhatsAppService.openNovoOrcamentoModal()">+ Adicionar Orçamento</button>
+                        </div>
+                    </div>
+                    <div class="wa-cards-list" id="waListOrcamentos"></div>
+                </div>
+            </div>
+
+            <div class="wa-panel" id="panel-wa-receber">
+                <div class="glass-card">
+                    <div class="section-header">
+                        <div>
+                            <h3>Cobrança Amigável de Saldos Restantes</h3>
+                            <p style="font-size:0.8rem; color:var(--text-tertiary);">Lembrete cordial com valor devido e sua chave PIX.</p>
+                        </div>
+                    </div>
+                    <div class="wa-cards-list" id="waListReceber"></div>
+                </div>
+            </div>
+
+            <div class="wa-panel" id="panel-wa-cuidados">
+                <div class="glass-card">
+                    <div class="section-header">
+                        <div>
+                            <h3>Guia Completo de Cuidados Pós-Tatuagem (Aftercare)</h3>
+                            <p style="font-size:0.8rem; color:var(--text-tertiary);">Envie as instruções de cicatrização para qualquer cliente com 1 toque.</p>
+                        </div>
+                    </div>
+                    <div class="wa-cards-list" id="waListCuidados"></div>
+                </div>
+            </div>
+
+            <div class="wa-panel" id="panel-wa-config">
+                <div class="glass-card" style="max-width: 680px;">
+                    <div class="section-header">
+                        <div>
+                            <h3>Configurações de Comunicação & PIX</h3>
+                            <p style="font-size:0.8rem; color:var(--text-tertiary);">Esses dados são preenchidos automaticamente nos textos gerados.</p>
+                        </div>
+                    </div>
+                    <form class="modal-form" id="formWaConfig" onsubmit="WhatsAppService.saveConfig(event)">
+                        <div class="form-group">
+                            <label for="waConfigPix">Chave PIX do Estúdio</label>
+                            <input type="text" id="waConfigPix" class="input-field" placeholder="Ex: chave aleatória, CPF, e-mail ou celular">
+                            <small style="color:var(--text-tertiary); font-size:0.75rem;">Aparecerá automaticamente nos lembretes de sinal e cobrança.</small>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="waConfigEstudio">Nome do Estúdio</label>
+                                <input type="text" id="waConfigEstudio" class="input-field" value="GH Studio">
+                            </div>
+                            <div class="form-group">
+                                <label for="waConfigInstagram">Instagram</label>
+                                <input type="text" id="waConfigInstagram" class="input-field" placeholder="@ghstudio">
+                            </div>
+                        </div>
+                        <div class="form-actions" style="margin-top: 20px;">
+                            <button type="submit" class="btn-primary">Salvar Configurações</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== PAGE: ESTOQUE & MATERIAIS ===== -->
+        <section class="page" id="page-estoque">
+            <!-- Header do Estoque -->
+            <div class="estoque-header-wrap glass-card">
+                <div class="eh-title-section">
+                    <div class="eh-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="eh-tag-pill">GESTÃO DE SUPRIMENTOS & INSUMOS</div>
+                        <h2 class="eh-title">Controle de Estoque do Estúdio</h2>
+                        <p class="eh-subtitle">Acompanhe cartuchos, pigmentos, EPIs e materiais de bancada com alertas inteligentes de reabastecimento.</p>
+                    </div>
+                </div>
+                <div class="eh-actions">
+                    <button type="button" class="btn-secondary" id="btnRegistrarCompraEstoque" title="Lançar compra de reposição de material">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        <span>Entrada / Compra</span>
+                    </button>
+                    <button type="button" class="btn-primary" id="btnNovoItemEstoque" title="Cadastrar novo insumo ou produto">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>Novo Item</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards de Resumo -->
+            <div class="estoque-kpi-grid">
+                <div class="estoque-kpi-card glass-card">
+                    <div class="ek-icon ek-icon-total">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    </div>
+                    <div class="ek-info">
+                        <span class="ek-label">Total de Itens</span>
+                        <h3 class="ek-value" id="kpiEstoqueTotal">0</h3>
+                        <span class="ek-sub" id="kpiEstoqueCategorias">Em 6 categorias</span>
+                    </div>
+                </div>
+
+                <div class="estoque-kpi-card glass-card">
+                    <div class="ek-icon ek-icon-normal">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <div class="ek-info">
+                        <span class="ek-label">Estoque Seguro</span>
+                        <h3 class="ek-value ek-val-green" id="kpiEstoqueNormal">0</h3>
+                        <span class="ek-sub">Acima do mínimo</span>
+                    </div>
+                </div>
+
+                <div class="estoque-kpi-card glass-card">
+                    <div class="ek-icon ek-icon-warning">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <div class="ek-info">
+                        <span class="ek-label">Estoque Baixo</span>
+                        <h3 class="ek-value ek-val-yellow" id="kpiEstoqueBaixo">0</h3>
+                        <span class="ek-sub">Reabastecer logo</span>
+                    </div>
+                </div>
+
+                <div class="estoque-kpi-card glass-card">
+                    <div class="ek-icon ek-icon-danger">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    </div>
+                    <div class="ek-info">
+                        <span class="ek-label">Esgotados</span>
+                        <h3 class="ek-value ek-val-red" id="kpiEstoqueEsgotado">0</h3>
+                        <span class="ek-sub">Zerados no estúdio</span>
+                    </div>
+                </div>
+
+                <div class="estoque-kpi-card glass-card">
+                    <div class="ek-icon ek-icon-valor">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div class="ek-info">
+                        <span class="ek-label">Valor em Estoque</span>
+                        <h3 class="ek-value ek-val-gold" id="kpiEstoqueValor">R$ 0,00</h3>
+                        <span class="ek-sub">Custo de reposição</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros e Barra de Ações -->
+            <div class="estoque-filter-bar glass-card">
+                <div class="search-input-wrap estoque-search-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="searchEstoque" class="input-field" placeholder="Buscar por material, agulha, tinta, marca ou fornecedor...">
+                </div>
+
+                <div class="estoque-status-filter">
+                    <label style="font-size:0.75rem; color:var(--text-tertiary); font-weight:600;">Status:</label>
+                    <select id="filterEstoqueStatus" class="input-field">
+                        <option value="todos">Todos os Status</option>
+                        <option value="baixo">⚠️ Estoque Baixo</option>
+                        <option value="esgotado">🚨 Esgotados (Zerados)</option>
+                        <option value="normal">✅ Estoque Normal</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Chips de Categoria -->
+            <div class="estoque-category-chips" id="estoqueCategoryChips">
+                <button type="button" class="filter-chip active" data-cat="todos">Todos os Materiais</button>
+                <button type="button" class="filter-chip" data-cat="agulhas">💉 Agulhas & Cartuchos</button>
+                <button type="button" class="filter-chip" data-cat="tintas">🎨 Tintas & Pigmentos</button>
+                <button type="button" class="filter-chip" data-cat="epi">🧤 EPIs & Higiene</button>
+                <button type="button" class="filter-chip" data-cat="preparacao">📄 Decalque & Bancada</button>
+                <button type="button" class="filter-chip" data-cat="aftercare">🧴 Pomadas & Cuidados</button>
+                <button type="button" class="filter-chip" data-cat="geral">📦 Outros</button>
+            </div>
+
+            <!-- Tabela / Grade de Itens do Estoque -->
+            <div class="estoque-table-container glass-card">
+                <div class="table-responsive">
+                    <table class="data-table estoque-table">
+                        <thead>
+                            <tr>
+                                <th>Material / Insumo</th>
+                                <th>Categoria</th>
+                                <th>Qtd. Atual</th>
+                                <th style="min-width: 170px;">Nível de Estoque</th>
+                                <th>Custo Unit.</th>
+                                <th>Total em Caixa</th>
+                                <th>Ajuste Rápido</th>
+                                <th style="text-align: right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="estoqueTableBody">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== BOTTOM TAB BAR (Mobile) ===== -->
+    <nav class="bottom-tabs" id="bottomTabs">
+        <button class="bottom-tab active" data-page="dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            <span>Dashboard</span>
+        </button>
+        <button class="bottom-tab" data-page="agenda">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span>Agenda</span>
+        </button>
+        <button class="bottom-tab" data-page="financeiro">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <span>Financeiro</span>
+        </button>
+        <button class="bottom-tab" data-page="clientes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span>Clientes</span>
+        </button>
+        <button class="bottom-tab" data-page="galeria">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <span>Galeria</span>
+        </button>
+        <button class="bottom-tab" data-page="estoque">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            <span>Estoque</span>
+        </button>
+        <button class="bottom-tab" data-page="whatsapp">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+            <span>WhatsApp</span>
+        </button>
+    </nav>
+
+    <!-- ===== MODAL: Nova Transação ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal glass-card" id="modalTransacao">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nova Transação</h2>
+                <button class="btn-icon modal-close" id="modalClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form class="modal-form" id="formTransacao">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="txTipo">Tipo</label>
+                        <select id="txTipo" class="input-field" required>
+                            <option value="entrada">Entrada</option>
+                            <option value="saida">Saída / Despesa</option>
+                            <option value="sinal">Sinal / Adiantamento</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="txValor">Valor (R$)</label>
+                        <input type="number" id="txValor" class="input-field" step="0.01" min="0" placeholder="0,00" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="txDescricao">Descrição</label>
+                    <input type="text" id="txDescricao" class="input-field" placeholder="Ex: Tatuagem blackwork braço" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1.2;">
+                        <label for="txClienteSelect">Cliente</label>
+                        <select id="txClienteSelect" class="input-field">
+                            <option value="">Selecione ou cadastre um cliente...</option>
+                            <option value="+novo">➕ Cadastrar Novo Cliente</option>
+                        </select>
+                        <input type="hidden" id="txCliente" name="txCliente" value="">
+                        <input type="hidden" id="txClienteId" name="txClienteId" value="">
+                        <div id="txClienteBadge" class="cliente-spent-badge" style="display:none;"></div>
+                        <!-- Open Debt Prompt (conditional: appears when client has pending receivables and tipo === 'entrada') -->
+                        <div id="txOpenDebtBox" class="open-debt-box" style="display:none; margin: 10px 0; padding: 12px 14px; background: rgba(245, 197, 24, 0.08); border: 1px solid rgba(245, 197, 24, 0.3); border-radius: var(--radius-sm);">
+                            <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:8px;">
+                                <span style="font-size:1.2rem; line-height:1;">⚠️</span>
+                                <div>
+                                    <strong style="color:var(--accent); font-size:0.88rem; display:block;">Cliente com valor pendente a receber!</strong>
+                                    <span style="font-size:0.78rem; color:var(--text-secondary);">Esta entrada refere-se a um valor em aberto ou é uma transação nova?</span>
+                                </div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.83rem; color:var(--text-primary);">
+                                    <input type="radio" name="txDebtOption" id="optAbaterDebt" value="abater" checked style="accent-color:var(--accent);">
+                                    <span><strong>Abater de valor em aberto</strong> (pagar parcela/quitar restante)</span>
+                                </label>
+                                <div id="txDebtSelectWrap" style="margin-left:22px;">
+                                    <select id="txDebtItemSelect" class="input-field" style="font-size:0.82rem; padding:6px 10px;">
+                                        <!-- dynamic options -->
+                                    </select>
+                                </div>
+                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.83rem; color:var(--text-primary);">
+                                    <input type="radio" name="txDebtOption" id="optNovaTx" value="nova" style="accent-color:var(--accent);">
+                                    <span><strong>Transação nova</strong> (não abater de valor em aberto)</span>
+                                </label>
+                            </div>
+                        </div>
+                        <!-- Collapsible new client fields -->
+                        <div id="newClienteFields" style="display:none; margin-top:8px; padding:12px; background:rgba(22,22,26,0.6); border:1px dashed var(--border-primary); border-radius:var(--radius-sm);">
+                            <div class="form-group" style="margin-bottom:8px;">
+                                <label for="newClienteNome" style="font-size:0.75rem; color:var(--text-secondary);">Nome Completo</label>
+                                <input type="text" id="newClienteNome" class="input-field" placeholder="Ex: Lucas Mendes">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="newClienteTel" style="font-size:0.75rem; color:var(--text-secondary);">WhatsApp</label>
+                                    <input type="text" id="newClienteTel" class="input-field" placeholder="(11) 98765-4321">
+                                </div>
+                                <div class="form-group">
+                                    <label for="newClienteEmail" style="font-size:0.75rem; color:var(--text-secondary);">E-mail (opcional)</label>
+                                    <input type="email" id="newClienteEmail" class="input-field" placeholder="lucas@email.com">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="flex: 0.8;">
+                        <label for="txMetodo">Método de Pagamento</label>
+                        <select id="txMetodo" class="input-field" required>
+                            <option value="pix">PIX</option>
+                            <option value="credito">Cartão de Crédito</option>
+                            <option value="debito">Cartão de Débito</option>
+                            <option value="dinheiro">Dinheiro</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Sinal Fields (conditional) -->
+                <div class="sinal-fields" id="sinalFields" style="display:none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="txValorTotal">Valor Total do Serviço (R$)</label>
+                            <input type="number" id="txValorTotal" class="input-field" step="0.01" min="0" placeholder="0,00">
+                        </div>
+                        <div class="form-group">
+                            <label>Valor Restante a Receber</label>
+                            <div class="valor-restante" id="valorRestante">R$ 0,00</div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top:6px;">
+                        <label for="txDataVencimentoSinal">Data Prevista para Pagamento do Restante</label>
+                        <input type="date" id="txDataVencimentoSinal" class="input-field">
+                        <small style="color:var(--text-tertiary); font-size:0.75rem;">O valor restante será automaticamente lançado em "Valores a Receber".</small>
+                    </div>
+                </div>
+                <!-- Despesa Category (conditional) -->
+                <div class="form-group despesa-fields" id="despesaFields" style="display:none;">
+                    <label for="txCategoria">Categoria da Despesa</label>
+                    <select id="txCategoria" class="input-field">
+                        <option value="materiais">Materiais (Agulhas, Tintas, Batoques)</option>
+                        <option value="epi">EPIs</option>
+                        <option value="aluguel">Aluguel</option>
+                        <option value="energia">Energia Elétrica</option>
+                        <option value="internet">Internet</option>
+                        <option value="manutencao">Manutenção</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="txData">Data</label>
+                        <input type="date" id="txData" class="input-field" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="btnCancelTx">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btnSaveTx">Salvar Transação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Novo Agendamento ===== -->
+    <div class="modal-overlay" id="modalAgendaOverlay">
+        <div class="modal glass-card" id="modalAgenda">
+            <div class="modal-header">
+                <h2>Novo Agendamento</h2>
+                <button class="btn-icon modal-close" id="modalAgendaClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form class="modal-form" id="formAgenda">
+                <div class="form-group">
+                    <label for="agClienteSelect">Cliente</label>
+                    <select id="agClienteSelect" class="input-field" required onfocus="if(window.populateAgClients && this.options.length <= 2) window.populateAgClients(this.value)" onclick="if(window.populateAgClients && this.options.length <= 2) window.populateAgClients(this.value)">
+                        <option value="">Selecione um cliente cadastrado...</option>
+                        <option value="+novo">➕ Cadastrar Novo Cliente</option>
+                    </select>
+                    <input type="hidden" id="agCliente" name="agCliente" value="">
+                    <input type="hidden" id="agClienteId" name="agClienteId" value="">
+                    <div id="agClienteBadge" class="cliente-spent-badge" style="display:none;"></div>
+                    <!-- Collapsible new client fields -->
+                    <div id="newAgClienteFields" style="display:none; margin-top:8px; padding:12px; background:rgba(22,22,26,0.6); border:1px dashed var(--border-primary); border-radius:var(--radius-sm);">
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label for="newAgClienteNome" style="font-size:0.75rem; color:var(--text-secondary);">Nome Completo</label>
+                            <input type="text" id="newAgClienteNome" class="input-field" placeholder="Ex: Carolina Silva">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="newAgClienteTel" style="font-size:0.75rem; color:var(--text-secondary);">WhatsApp</label>
+                                <input type="text" id="newAgClienteTel" class="input-field" placeholder="(11) 98765-4321">
+                            </div>
+                            <div class="form-group">
+                                <label for="newAgClienteEmail" style="font-size:0.75rem; color:var(--text-secondary);">E-mail (opcional)</label>
+                                <input type="email" id="newAgClienteEmail" class="input-field" placeholder="carol@email.com">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="agDescricao">Descrição da Tatuagem / Projeto</label>
+                    <textarea id="agDescricao" class="input-field" rows="2" placeholder="Ex: Dragão oriental no antebraço, estilo Blackwork com sombreamento"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="agData">Data da Sessão</label>
+                        <input type="date" id="agData" class="input-field" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="agInicio">Início</label>
+                        <input type="time" id="agInicio" class="input-field" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="agFim">Término</label>
+                        <input type="time" id="agFim" class="input-field" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="agValorTotal">Valor Total da Sessão (R$)</label>
+                        <input type="number" id="agValorTotal" class="input-field" step="0.01" min="0" placeholder="0,00" required oninput="if(window.calcAgRestante) window.calcAgRestante()" onchange="if(window.calcAgRestante) window.calcAgRestante()">
+                    </div>
+                    <div class="form-group">
+                        <label for="agValorSinal">Valor do Sinal (R$)</label>
+                        <input type="number" id="agValorSinal" class="input-field" step="0.01" min="0" placeholder="0,00" oninput="if(window.calcAgRestante) window.calcAgRestante()" onchange="if(window.calcAgRestante) window.calcAgRestante()">
+                    </div>
+                    <div class="form-group">
+                        <label for="agSinalPago">Status do Sinal</label>
+                        <select id="agSinalPago" class="input-field" onchange="if(window.calcAgRestante) window.calcAgRestante()">
+                            <option value="sim">Sinal já pago</option>
+                            <option value="pendente">Sinal pendente (A receber)</option>
+                            <option value="nao">Sem sinal prévio</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="ag-financeiro-preview" style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.2); border-radius:var(--radius-sm); margin-bottom:12px;">
+                    <span style="font-size:0.82rem; color:var(--text-secondary);">Restante a pagar na sessão:</span>
+                    <strong id="agValorRestante" style="font-size:1rem; color:var(--accent);">R$ 0,00</strong>
+                </div>
+
+                <div class="form-group" id="agDataRestanteGroup" style="margin-bottom:14px;">
+                    <label for="agDataVencimentoRestante">Data Prevista para Pagamento do Restante</label>
+                    <input type="date" id="agDataVencimentoRestante" class="input-field">
+                    <small style="color:var(--text-tertiary); font-size:0.75rem;">O valor restante será automaticamente lançado em "Valores a Receber".</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="agStatus">Status do Agendamento</label>
+                    <select id="agStatus" class="input-field">
+                        <option value="agendado">Agendado</option>
+                        <option value="concluido">Concluído</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Imagem de Referência da Tatuagem</label>
+                    <div class="file-dropzone" id="agDropzone">
+                        <input type="file" id="agFileInput" accept="image/*" style="display:none;">
+                        <div class="dropzone-content" id="agDropzonePrompt">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            <span>Clique ou arraste a imagem de referência para este agendamento</span>
+                            <small>Formatos: JPG, PNG ou WEBP</small>
+                        </div>
+                        <div class="dropzone-preview" id="agDropzonePreview" style="display:none;">
+                            <img id="agPreviewImg" src="" alt="Referência">
+                            <button type="button" class="btn-remove-preview" id="agRemovePreview" title="Remover imagem">✕</button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="agReferenciaUrl" value="">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-danger" id="btnDeleteModalAg" style="display:none; margin-right:auto;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Excluir Agendamento
+                    </button>
+                    <button type="button" class="btn-secondary" id="btnCancelAg">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar Agendamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Novo Trabalho no Portfólio / Galeria ===== -->
+    <div class="modal-overlay" id="modalGaleriaOverlay">
+        <div class="modal glass-card" id="modalGaleria">
+            <div class="modal-header">
+                <h2 id="modalGaleriaTitle">Adicionar Obra ao Portfólio</h2>
+                <button class="btn-icon modal-close" id="modalGaleriaClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form class="modal-form" id="formGaleria">
+                <div class="form-group">
+                    <label for="galTitulo">Título / Descrição da Obra</label>
+                    <input type="text" id="galTitulo" class="input-field" placeholder="Ex: Leão Realista Blackwork Antebraço" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="galEstilo">Estilo da Tatuagem</label>
+                        <select id="galEstilo" class="input-field" required>
+                            <option value="blackwork">Blackwork</option>
+                            <option value="fineline">Fine Line</option>
+                            <option value="realismo">Realismo</option>
+                            <option value="oriental">Oriental / Irezumi</option>
+                            <option value="oldschool">Old School</option>
+                            <option value="aquarela">Aquarela</option>
+                            <option value="geometrico">Geométrico</option>
+                            <option value="outros">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="galCliente">Cliente</label>
+                        <input type="text" id="galCliente" class="input-field" placeholder="Nome do cliente" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="galData">Data da Realização</label>
+                        <input type="date" id="galData" class="input-field" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Fotografia da Tatuagem (Alta Resolução)</label>
+                    <div class="file-dropzone" id="galDropzone">
+                        <input type="file" id="galFileInput" accept="image/*" style="display:none;">
+                        <div class="dropzone-content" id="galDropzonePrompt">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            <span>Clique para selecionar a foto ou arraste o arquivo aqui</span>
+                            <small>Formatos: JPG, PNG ou WEBP</small>
+                        </div>
+                        <div class="dropzone-preview" id="galDropzonePreview" style="display:none;">
+                            <img id="galPreviewImg" src="" alt="Obra">
+                            <button type="button" class="btn-remove-preview" id="galRemovePreview" title="Remover imagem">✕</button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="galImagemUrl" value="">
+                </div>
+                <div class="form-group">
+                    <label for="galDescricao">Ficha Técnica & Observações</label>
+                    <textarea id="galDescricao" class="input-field" rows="3" placeholder="Detalhes técnicos (ex: agulhas 3RL/7RS, tempo de sessão, cuidados)..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="btnCancelGal">Cancelar</button>
+                    <button type="submit" class="btn-primary">Publicar na Galeria</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Lightbox de Imagem em Alta Resolução ===== -->
+    <div class="lightbox-overlay" id="modalLightboxOverlay">
+        <button class="lightbox-close" id="lightboxClose" title="Fechar (ESC)">✕</button>
+        <div class="lightbox-container">
+            <div class="lightbox-image-wrap">
+                <img id="lightboxImage" src="" alt="Imagem Ampliada">
+            </div>
+            <div class="lightbox-details" id="lightboxDetails">
+                <span class="lightbox-tag" id="lightboxTag">Estilo</span>
+                <h3 class="lightbox-title" id="lightboxTitle">Título da Tatuagem</h3>
+                <p class="lightbox-meta" id="lightboxMeta">Cliente: - • Data: -</p>
+                <p class="lightbox-desc" id="lightboxDesc">Descrição do trabalho...</p>
+                <button type="button" class="btn-danger btn-sm" id="btnDeleteLightbox" style="margin-top: 16px; width: 100%; display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    <span>Excluir Obra da Galeria</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Exportação de Relatórios PDF ===== -->
+    <div class="modal-overlay" id="modalPDFOverlay">
+        <div class="modal glass-card" id="modalPDF">
+            <div class="modal-header">
+                <h2>Exportar Relatório PDF</h2>
+                <button class="btn-icon modal-close" id="modalPDFClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="pdf-export-options">
+                <div class="pdf-option-card" id="btnExportRelGeral">
+                    <div class="pdf-option-icon">📊</div>
+                    <div class="pdf-option-info">
+                        <h4>Relatório Financeiro Geral</h4>
+                        <p>Consolidado com faturamento, despesas categorizadas, margem líquida e transações detalhadas.</p>
+                    </div>
+                    <button class="btn-primary btn-sm">Baixar PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Valor a Receber ===== -->
+    <div class="modal-overlay" id="modalReceberOverlay">
+        <div class="modal glass-card" id="modalReceber" style="max-width:480px;">
+            <div class="modal-header">
+                <h2 id="modalReceberTitle">Valor a Receber</h2>
+                <button class="btn-icon modal-close" id="modalReceberClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form class="modal-form" id="formReceber">
+                <input type="hidden" id="recId" value="">
+                <div class="form-group">
+                    <label for="recClienteSelect">Cliente</label>
+                    <select id="recClienteSelect" class="input-field" required>
+                        <!-- populated with clients -->
+                    </select>
+                    <input type="hidden" id="recCliente" value="">
+                    <input type="hidden" id="recClienteId" value="">
+                </div>
+                <div class="form-group">
+                    <label for="recDescricao">Descrição do Serviço / Trabalho</label>
+                    <input type="text" id="recDescricao" class="input-field" placeholder="Ex: Fechamento de braço oriental" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="recValorTotal">Valor Total Pendente (R$)</label>
+                        <input type="number" id="recValorTotal" class="input-field" step="0.01" min="0" placeholder="0,00" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="recValorPago">Valor Já Pago (R$)</label>
+                        <input type="number" id="recValorPago" class="input-field" step="0.01" min="0" placeholder="0,00" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="recDataVencimento">Data de Quando o Valor Será Pago</label>
+                        <input type="date" id="recDataVencimento" class="input-field" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="recDataSessao">Data da Sessão (opcional)</label>
+                        <input type="date" id="recDataSessao" class="input-field">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="btnCancelRec">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btnSaveRec">Salvar Valor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Estipular Meta Mensal ===== -->
+    <div class="modal-overlay" id="modalMetaOverlay">
+        <div class="modal glass-card" id="modalMeta" style="max-width: 440px;">
+            <div class="modal-header">
+                <h2>Estipular Meta Mensal</h2>
+                <button class="btn-icon modal-close" id="modalMetaClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form class="modal-form" id="formMetaMensal">
+                <div class="form-group">
+                    <label for="metaInputValor">Valor da Meta Financeira (R$)</label>
+                    <input type="number" id="metaInputValor" class="input-field" step="100" min="0" placeholder="10.000,00" required style="font-size:1.2rem; font-weight:700; color:var(--accent);">
+                    <small style="color:var(--text-tertiary); font-size:0.75rem; margin-top:4px;">Defina o objetivo de faturamento bruto para este mês.</small>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:6px;">Metas Rápidas:</label>
+                    <div class="quick-meta-chips" style="display:flex; flex-wrap:wrap; gap:8px;">
+                        <button type="button" class="chip" onclick="document.getElementById('metaInputValor').value = 5000">R$ 5.000</button>
+                        <button type="button" class="chip" onclick="document.getElementById('metaInputValor').value = 10000">R$ 10.000</button>
+                        <button type="button" class="chip" onclick="document.getElementById('metaInputValor').value = 15000">R$ 15.000</button>
+                        <button type="button" class="chip" onclick="document.getElementById('metaInputValor').value = 20000">R$ 20.000</button>
+                        <button type="button" class="chip" onclick="document.getElementById('metaInputValor').value = 30000">R$ 30.000</button>
+                        <button type="button" class="chip" onclick="document.getElementById('metaInputValor').value = 50000">R$ 50.000</button>
+                    </div>
+                </div>
+                <div class="form-actions" style="margin-top:20px;">
+                    <button type="button" class="btn-secondary" id="btnCancelMeta">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btnSaveMeta">Salvar Meta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Termo de Consentimento & Ficha de Anamnese ===== -->
+    <div class="modal-overlay" id="modalAnamneseOverlay">
+        <div class="modal glass-card modal-anamnese" id="modalAnamnese" style="max-width: 760px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:36px; height:36px; border-radius:8px; background:rgba(245, 197, 24, 0.15); color:var(--accent); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                    </div>
+                    <div>
+                        <h2 style="font-size:1.15rem; margin-bottom:2px;">Termo de Consentimento & Anamnese</h2>
+                        <span style="font-size:0.75rem; color:var(--text-tertiary);">Ficha oficial de avaliação de saúde com assinatura digital para tatuagem</span>
+                    </div>
+                </div>
+                <button class="btn-icon modal-close" id="modalAnamneseClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            
+            <form class="modal-form" id="formAnamnese" style="padding-top:10px;">
+                <input type="hidden" id="anamClienteId" value="">
+                
+                <!-- Status Banner -->
+                <div id="anamStatusBanner" class="anam-status-banner" style="display:none;"></div>
+
+                <!-- 1. Dados Pessoais do Cliente -->
+                <div class="anam-section">
+                    <h3 class="anam-section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        1. Dados do Cliente
+                    </h3>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:2;">
+                            <label for="anamNome">Nome Completo</label>
+                            <input type="text" id="anamNome" class="input-field" placeholder="Nome completo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="anamNascimento">Data de Nascimento</label>
+                            <input type="date" id="anamNascimento" class="input-field">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="anamCpf">CPF</label>
+                            <input type="text" id="anamCpf" class="input-field" placeholder="000.000.000-00">
+                        </div>
+                        <div class="form-group">
+                            <label for="anamRg">RG</label>
+                            <input type="text" id="anamRg" class="input-field" placeholder="00.000.000-0">
+                        </div>
+                        <div class="form-group">
+                            <label for="anamTelefone">Telefone / WhatsApp</label>
+                            <input type="text" id="anamTelefone" class="input-field" placeholder="(11) 99999-9999">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="anamEndereco">Endereço Completo</label>
+                        <input type="text" id="anamEndereco" class="input-field" placeholder="Rua, número, bairro, cidade - UF">
+                    </div>
+                </div>
+
+                <!-- 2. Questionário de Saúde (Anamnese) -->
+                <div class="anam-section">
+                    <h3 class="anam-section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        2. Avaliação de Saúde & Restrições (Anamnese)
+                    </h3>
+                    <p style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:12px;">Selecione atentamente se o cliente apresenta alguma das condições abaixo:</p>
+                    
+                    <div class="anam-questions-list" id="anamQuestionsList">
+                        <!-- Questions dynamic items -->
+                    </div>
+
+                    <div class="form-group" style="margin-top:14px;">
+                        <label for="anamObsSaude">Outras alergias, medicamentos contínuos ou observações médicas</label>
+                        <textarea id="anamObsSaude" class="input-field" rows="2" placeholder="Descreva caso haja qualquer condição de saúde não mencionada acima..."></textarea>
+                    </div>
+                </div>
+
+                <!-- 3. Termo de Consentimento Livre e Esclarecido (TCLE) -->
+                <div class="anam-section">
+                    <h3 class="anam-section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        3. Termo de Consentimento & Responsabilidade
+                    </h3>
+                    <div class="anam-legal-box">
+                        <p><strong>1. Veracidade:</strong> Declaro que todas as informações médicas e pessoais fornecidas nesta ficha são autênticas e completas.</p>
+                        <p><strong>2. Caráter Definitivo:</strong> Tenho ciência de que a tatuagem é um procedimento invasivo, doloroso e de caráter <strong>permanente</strong>, tendo escolhido o desenho e local de livre e espontânea vontade.</p>
+                        <p><strong>3. Cuidados Pós-Procedimento:</strong> Comprometo-me a seguir rigorosamente todas as recomendações de higiene, hidratação e proteção solar transmitidas pelo profissional para a perfeita cicatrização da pele.</p>
+                        <p><strong>4. Idade Legal:</strong> Declaro ser maior de 18 anos de idade e civilmente capaz de autorizar a realização do procedimento.</p>
+                    </div>
+
+                    <div class="form-group" style="margin-top:10px;">
+                        <label class="anam-checkbox-wrap">
+                            <input type="checkbox" id="anamAutorizaFoto" checked>
+                            <span>Autorizo o estúdio a registrar fotografias do trabalho para divulgação em portfólio profissional e redes sociais.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 4. Assinatura Digital do Cliente -->
+                <div class="anam-section">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <h3 class="anam-section-title" style="margin-bottom:0;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            4. Assinatura Digital do Cliente
+                        </h3>
+                        <button type="button" class="btn-secondary btn-sm" id="btnClearSignature" style="padding:4px 10px; font-size:0.75rem;">Limpar Assinatura</button>
+                    </div>
+                    <p style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:8px;">Assine diretamente no quadro abaixo utilizando o dedo (touch) ou o mouse:</p>
+                    
+                    <div class="signature-canvas-wrap">
+                        <canvas id="signatureCanvas" width="700" height="170"></canvas>
+                        <div class="signature-line-hint">Assine sobre o quadro</div>
+                    </div>
+                    <div id="signatureStatusText" style="font-size:0.75rem; color:var(--text-tertiary); margin-top:6px; display:flex; justify-content:space-between;">
+                        <span id="sigStateMsg">Aguardando assinatura do cliente...</span>
+                        <span id="sigDateMsg"></span>
+                    </div>
+                </div>
+
+                <!-- Ações do Modal -->
+                <div class="form-actions" style="margin-top:20px; display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+                    <button type="button" class="btn-danger btn-sm" id="btnDeleteAnamnese" style="display:none; margin-right:auto;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Excluir Termo
+                    </button>
+                    <button type="button" class="btn-secondary" id="btnCancelAnamnese">Fechar</button>
+                    <button type="button" class="btn-secondary" id="btnExportPDFAnamnese" title="Exportar Termo de Consentimento em PDF" onclick="handleExportAnamnesePDF()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>
+                        Exportar Termo PDF
+                    </button>
+                    <button type="button" class="btn-whatsapp btn-sm" id="btnWhatsappAnamnese" style="display:none; background:#25D366; color:#FFFFFF; border:none; padding:8px 14px; border-radius:var(--radius-sm); font-size:0.85rem; font-weight:600; cursor:pointer; display:none; align-items:center; gap:6px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                        Enviar Cuidados
+                    </button>
+                    <button type="submit" class="btn-primary" id="btnSaveAnamnese">Salvar Termo & Assinatura</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Enviar WhatsApp Interativo ===== -->
+    <div class="modal-overlay" id="modalWhatsAppOverlay">
+        <div class="modal glass-card" id="modalWhatsApp" style="max-width: 540px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:32px; height:32px; border-radius:50%; background:rgba(37,211,102,0.15); color:#25D366; display:flex; align-items:center; justify-content:center;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    </div>
+                    <div>
+                        <h2>Enviar Mensagem WhatsApp</h2>
+                        <span style="font-size:0.78rem; color:var(--text-tertiary);" id="waModalClienteNome">Cliente</span>
+                    </div>
+                </div>
+                <button class="btn-icon modal-close" onclick="WhatsAppService.closeModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-form">
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;">
+                        <label for="waDestinatarioTel">WhatsApp do Cliente (com DDD)</label>
+                        <input type="text" id="waDestinatarioTel" class="input-field" placeholder="(11) 98765-4321">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label for="waTipoMensagem">Modelo da Mensagem</label>
+                        <select id="waTipoMensagem" class="input-field">
+                            <option value="sinal_pendente">Lembrete de Sinal Pendente</option>
+                            <option value="sessao_marcada">Confirmação de Sessão</option>
+                            <option value="orcamento_followup">Follow-up de Orçamento</option>
+                            <option value="valor_receber">Cobrança de Saldo Restante</option>
+                            <option value="cuidados_pos">Cuidados Pós-Tattoo (Aftercare)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <label for="waMensagemTexto">Mensagem Formatada (editável)</label>
+                        <span id="waCharCount" style="font-size:0.75rem; color:var(--text-tertiary);">0 caracteres</span>
+                    </div>
+                    <textarea id="waMensagemTexto" class="input-field" rows="9" style="font-family: inherit; font-size:0.86rem; line-height:1.5; resize:vertical;"></textarea>
+                </div>
+
+                <div class="wa-quick-tags" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+                    <span style="font-size:0.75rem; color:var(--text-tertiary);">Dica: você pode editar o texto livremente antes de disparar.</span>
+                </div>
+
+                <div class="form-actions" style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" class="btn-secondary" onclick="WhatsAppService.copyCurrentMessage()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:6px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span>Copiar Texto</span>
+                    </button>
+                    <button type="button" class="btn-whatsapp" onclick="WhatsAppService.dispatchCurrentMessage()" style="padding:10px 18px; font-weight:600; font-size:0.9rem;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                        <span>Abrir no WhatsApp</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Novo Orçamento para Follow-up ===== -->
+    <div class="modal-overlay" id="modalNovoOrcamentoOverlay">
+        <div class="modal glass-card" id="modalNovoOrcamento" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2>Novo Orçamento em Acompanhamento</h2>
+                <button class="btn-icon modal-close" onclick="WhatsAppService.closeNovoOrcamentoModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form class="modal-form" id="formNovoOrcamento" onsubmit="WhatsAppService.saveOrcamento(event)">
+                <div class="form-group">
+                    <label for="orcClienteSelect">Vincular a Cliente Existente (opcional)</label>
+                    <select id="orcClienteSelect" class="input-field"></select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="orcClienteNome">Nome do Cliente</label>
+                        <input type="text" id="orcClienteNome" class="input-field" placeholder="Ex: Felipe Ramos" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="orcClienteTel">WhatsApp</label>
+                        <input type="text" id="orcClienteTel" class="input-field" placeholder="(11) 98765-4321">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="orcDescricao">Projeto / Ideia da Tatuagem</label>
+                    <input type="text" id="orcDescricao" class="input-field" placeholder="Ex: Lobo geométrico no antebraço" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="orcValor">Valor Estimado (R$)</label>
+                        <input type="number" id="orcValor" class="input-field" step="0.01" min="0" placeholder="0,00">
+                    </div>
+                    <div class="form-group">
+                        <label for="orcEstilo">Estilo</label>
+                        <select id="orcEstilo" class="input-field">
+                            <option value="blackwork">Blackwork</option>
+                            <option value="fineline">Fine Line</option>
+                            <option value="realismo">Realismo</option>
+                            <option value="oriental">Oriental</option>
+                            <option value="oldschool">Old School</option>
+                            <option value="aquarela">Aquarela</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions" style="margin-top:16px;">
+                    <button type="button" class="btn-secondary" onclick="WhatsAppService.closeNovoOrcamentoModal()">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar Orçamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Cadastrar / Editar Item de Estoque ===== -->
+    <div class="modal-overlay" id="modalEstoqueOverlay">
+        <div class="modal glass-card" id="modalEstoque" style="max-width: 560px;">
+            <div class="modal-header">
+                <h2 id="modalEstoqueTitle">Novo Item de Estoque</h2>
+                <button class="btn-icon modal-close" id="modalEstoqueClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form class="modal-form" id="formEstoque">
+                <input type="hidden" id="estoqueId" value="">
+                
+                <div class="form-group">
+                    <label for="estNome">Nome do Material / Insumo *</label>
+                    <input type="text" id="estNome" class="input-field" placeholder="Ex: Cartuchos Aston 3RL 0.30mm (Caixa c/ 20)" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="estCategoria">Categoria *</label>
+                        <select id="estCategoria" class="input-field" required>
+                            <option value="agulhas">💉 Agulhas & Cartuchos</option>
+                            <option value="tintas">🎨 Tintas & Pigmentos</option>
+                            <option value="epi">🧤 EPIs & Higiene</option>
+                            <option value="preparacao">📄 Decalque & Bancada</option>
+                            <option value="aftercare">🧴 Pomadas & Cuidados</option>
+                            <option value="geral">📦 Geral / Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="estUnidade">Unidade de Medida *</label>
+                        <select id="estUnidade" class="input-field" required>
+                            <option value="cx">Caixa (cx)</option>
+                            <option value="un">Unidade (un)</option>
+                            <option value="frasco">Frasco (fr)</option>
+                            <option value="pote">Pote</option>
+                            <option value="rolo">Rolo</option>
+                            <option value="pacote">Pacote (pct)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="estQuantidade">Quantidade Atual em Estoque *</label>
+                        <input type="number" id="estQuantidade" class="input-field" step="1" min="0" placeholder="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="estQuantidadeMinima">Estoque Mínimo de Alerta *</label>
+                        <input type="number" id="estQuantidadeMinima" class="input-field" step="1" min="1" placeholder="Ex: 3" required>
+                        <small style="color:var(--text-tertiary); font-size:0.75rem;">Dispara alerta no sininho quando atingir este valor.</small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="estPrecoCusto">Preço de Custo Unitário (R$)</label>
+                        <input type="number" id="estPrecoCusto" class="input-field" step="0.01" min="0" placeholder="0,00">
+                    </div>
+                    <div class="form-group">
+                        <label for="estMarca">Marca / Fabricante</label>
+                        <input type="text" id="estMarca" class="input-field" placeholder="Ex: Dynamic, Aston, Unigloves">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="estFornecedor">Fornecedor / Onde Comprar</label>
+                    <input type="text" id="estFornecedor" class="input-field" placeholder="Ex: Tattoo Supply SP, Mercado Livre, Distribuidora...">
+                </div>
+
+                <div class="form-group">
+                    <label for="estNotas">Observações / Detalhes de Uso</label>
+                    <textarea id="estNotas" class="input-field" rows="2" placeholder="Ex: Utilizar preferencialmente em traços finos e detalhes pequenos..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-danger" id="btnDeleteEstoqueItem" style="display:none; margin-right:auto;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Excluir Item
+                    </button>
+                    <button type="button" class="btn-secondary" id="btnCancelEstoque">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Registrar Entrada / Compra ou Baixa de Estoque ===== -->
+    <div class="modal-overlay" id="modalEstoqueMovOverlay">
+        <div class="modal glass-card" id="modalEstoqueMov" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="modalEstoqueMovTitle">Registrar Entrada de Material</h2>
+                <button class="btn-icon modal-close" id="modalEstoqueMovClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form class="modal-form" id="formEstoqueMov">
+                <div class="form-group">
+                    <label for="movItemSelect">Material / Insumo *</label>
+                    <select id="movItemSelect" class="input-field" required>
+                        <!-- Populated via JS -->
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="movTipo">Tipo de Movimentação *</label>
+                        <select id="movTipo" class="input-field" required>
+                            <option value="entrada">➕ Entrada (Compra / Reposição)</option>
+                            <option value="saida">➖ Baixa (Consumo / Descarte)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="movQuantidade">Quantidade *</label>
+                        <input type="number" id="movQuantidade" class="input-field" step="1" min="1" value="1" required>
+                    </div>
+                </div>
+
+                <!-- Financial Expense Integration Box (Visible on Entrada) -->
+                <div id="movFinanceiroBox" style="background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.25); border-radius:var(--radius-sm); padding:14px; margin-bottom:14px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:var(--accent); font-size:0.88rem; margin-bottom:10px;">
+                        <input type="checkbox" id="movGerarDespesa" checked style="width:17px;height:17px;accent-color:var(--accent);">
+                        <span>Lançar automaticamente como Despesa no Financeiro</span>
+                    </label>
+                    <div id="movFinanceiroCampos">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="movValorTotal" style="font-size:0.75rem;">Valor Total Pago (R$)</label>
+                                <input type="number" id="movValorTotal" class="input-field" step="0.01" min="0" placeholder="0,00">
+                            </div>
+                            <div class="form-group">
+                                <label for="movMetodo" style="font-size:0.75rem;">Forma de Pagamento</label>
+                                <select id="movMetodo" class="input-field">
+                                    <option value="pix">PIX</option>
+                                    <option value="credito">Cartão de Crédito</option>
+                                    <option value="debito">Cartão de Débito</option>
+                                    <option value="dinheiro">Dinheiro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="movData">Data da Movimentação</label>
+                        <input type="date" id="movData" class="input-field" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="movMotivo">Motivo / Fornecedor</label>
+                        <input type="text" id="movMotivo" class="input-field" placeholder="Ex: Compra semanal, Sessão...">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="btnCancelEstoqueMov">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btnSalvarEstoqueMov">Confirmar Movimentação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Sincronização em Nuvem & Conectar Celular ===== -->
+    <div class="modal-overlay" id="modalCloudSyncOverlay">
+        <div class="modal glass-card" id="modalCloudSync" style="max-width: 580px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="cloud-modal-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
+                            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 style="font-size:1.15rem; margin-bottom:2px;">Nuvem & Conexão de Dispositivos</h2>
+                        <span style="font-size:0.75rem; color:var(--text-tertiary);">Sincronização em tempo real entre computador, celular e tablet</span>
+                    </div>
+                </div>
+                <button class="btn-icon modal-close" id="modalCloudSyncClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <div class="cloud-sync-body" style="padding:16px 0 0 0;">
+                <!-- Card 1: Status da Conexão Firebase -->
+                <div class="cloud-status-box">
+                    <div class="cs-status-indicator">
+                        <span class="cs-live-dot" id="cloudLiveDot"></span>
+                        <div class="cs-status-info">
+                            <span class="cs-status-title" id="cloudModalStatusTitle">Firebase Cloud Ativo</span>
+                            <span class="cs-status-sub" id="cloudModalStatusSub">Sincronização bidirecional em tempo real</span>
+                        </div>
+                    </div>
+                    <div class="cs-user-pill">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span id="cloudModalUserEmail">Conectado</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Conectar Celular / Tablet via QR Code -->
+                <div class="cloud-mobile-connect-box">
+                    <div class="cmc-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--gold);"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                        <strong>Acessar no Celular ou Tablet</strong>
+                    </div>
+                    <p class="cmc-desc">
+                        Aponte a câmera do seu smartphone para o QR Code abaixo para abrir o <strong>GH Studio</strong> diretamente no celular na mesma rede Wi-Fi:
+                    </p>
+
+                    <div class="cmc-qr-section">
+                        <div class="cmc-qrcode-frame" id="qrcodeContainer"></div>
+                        <div class="cmc-link-wrap">
+                            <label style="font-size:0.75rem; color:var(--text-tertiary); font-weight:600;">Ou acesse este link no navegador do celular:</label>
+                            <div class="cmc-input-copy">
+                                <input type="text" id="cloudMobileUrlInput" readonly value="http://192.168.1.238:3000/">
+                                <button type="button" class="btn-copy-link" id="btnCopyMobileUrl" title="Copiar link para o celular">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    <span>Copiar</span>
+                                </button>
+                            </div>
+                            <div class="cmc-tip">
+                                💡 <strong>Dica Pro:</strong> No celular, toque em <em>Compartilhar > Adicionar à Tela de Início</em> para salvar como app nativo na bancada do estúdio!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Sincronização e Migração de Dados -->
+                <div class="cloud-data-sync-box">
+                    <div class="cds-header">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:17px;height:17px;color:var(--gold);"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                            <strong>Sincronização de Dados</strong>
+                        </div>
+                        <span class="cds-count-badge" id="cloudSyncCountBadge">Verificando...</span>
+                    </div>
+                    <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:12px;">
+                        Envie os clientes, agendamentos, finanças e termos salvos no navegador deste computador para a Nuvem Firebase para que apareçam instantaneamente no seu celular.
+                    </p>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button type="button" class="btn-primary" id="btnSyncLocalToCloud" style="flex:1;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Sincronizar PC ➔ Nuvem
+                        </button>
+                        <button type="button" class="btn-secondary" id="btnRefreshFromCloud" style="flex:1;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                            Recarregar da Nuvem
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions" style="margin-top:20px; justify-content:flex-end;">
+                <button type="button" class="btn-secondary" id="btnCancelCloudSync">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Calculadora Inteligente de Orçamento de Tattoo ===== -->
+    <div class="modal-overlay" id="modalCalculadoraOverlay">
+        <div class="modal glass-card modal-calculadora" id="modalCalculadora" style="max-width: 960px; max-height: 92vh; overflow-y: auto;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="calc-header-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px;">
+                            <rect x="4" y="2" width="16" height="20" rx="2"/>
+                            <line x1="8" y1="6" x2="16" y2="6"/>
+                            <line x1="16" y1="14" x2="16" y2="18"/>
+                            <path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/>
+                            <path d="M12 14h.01"/><path d="M8 14h.01"/>
+                            <path d="M12 18h.01"/><path d="M8 18h.01"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 style="font-size:1.2rem; margin-bottom:2px;">Calculadora de Orçamento de Tatuagem</h2>
+                        <span style="font-size:0.75rem; color:var(--text-tertiary);">Precificação inteligente baseada em dimensões, estilo, biossegurança e valor/hora</span>
+                    </div>
+                </div>
+                <button class="btn-icon modal-close" id="modalCalculadoraClose" onclick="if(window.TattooCalculator) TattooCalculator.closeModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <!-- Presets Rápidos -->
+            <div class="calc-presets-bar">
+                <span class="calc-presets-label">⚡ Modelos Rápidos:</span>
+                <div class="calc-presets-list">
+                    <button type="button" class="calc-preset-chip" data-preset="escrita_pequena">✍️ Escrita no Pulso</button>
+                    <button type="button" class="calc-preset-chip" data-preset="fineline_floral">🌿 Floral Fine Line</button>
+                    <button type="button" class="calc-preset-chip" data-preset="flash_blackwork">🖤 Flash 10x10cm</button>
+                    <button type="button" class="calc-preset-chip" data-preset="realismo_antibraco">👁️ Realismo Antebraço</button>
+                    <button type="button" class="calc-preset-chip" data-preset="coverup_antigo">🔄 Cover-up / Reforma</button>
+                </div>
+            </div>
+
+            <div class="calc-two-columns">
+                <!-- Coluna 1: Entradas e Parâmetros da Tattoo -->
+                <div class="calc-col-inputs">
+                    <!-- Cliente & Projeto -->
+                    <div class="calc-card-section">
+                        <div class="calc-section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <span>1. Cliente & Projeto</span>
+                        </div>
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label for="calcClienteSelect" style="font-size:0.75rem;">Vincular Cliente Cadastrado (opcional)</label>
+                            <select id="calcClienteSelect" class="input-field" onfocus="if(window.TattooCalculator) TattooCalculator.populateClientSelect()">
+                                <option value="">Cliente Avulso (novo contato WhatsApp)</option>
+                            </select>
+                            <input type="hidden" id="calcClienteId" value="">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex:1.2;">
+                                <label for="calcClienteNome" style="font-size:0.75rem;">Nome do Cliente</label>
+                                <input type="text" id="calcClienteNome" class="input-field" placeholder="Ex: Felipe Ramos">
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label for="calcClienteTel" style="font-size:0.75rem;">WhatsApp (com DDD)</label>
+                                <input type="text" id="calcClienteTel" class="input-field" placeholder="(11) 98765-4321">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="calcDescricao" style="font-size:0.75rem;">Ideia / Descrição do Projeto</label>
+                            <input type="text" id="calcDescricao" class="input-field" placeholder="Ex: Leão geométrico com rosa blackwork">
+                        </div>
+                    </div>
+
+                    <!-- Dimensões & Local do Corpo -->
+                    <div class="calc-card-section">
+                        <div class="calc-section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                            <span>2. Dimensões & Local</span>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="calcLargura" style="font-size:0.75rem;">Largura (cm)</label>
+                                <input type="number" id="calcLargura" class="input-field" step="0.5" min="1" max="100" value="10">
+                            </div>
+                            <div class="form-group">
+                                <label for="calcAltura" style="font-size:0.75rem;">Altura (cm)</label>
+                                <input type="number" id="calcAltura" class="input-field" step="0.5" min="1" max="100" value="15">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:0.75rem;">Área Estimada</label>
+                                <div class="calc-badge-display" id="calcAreaDisplay">150 cm² (10x15cm)</div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="calcLocal" style="font-size:0.75rem;">Local do Corpo (Dificuldade & Dor)</label>
+                            <select id="calcLocal" class="input-field">
+                                <option value="braco">Antebraço / Bíceps (Pele plana, fácil execução)</option>
+                                <option value="panturrilha">Panturrilha / Coxa (Boa tolerância à dor)</option>
+                                <option value="ombro">Ombro / Trapézio (Curvatura média)</option>
+                                <option value="peito">Peito / Canela (Sensibilidade média)</option>
+                                <option value="coluna">Coluna / Lombar (Tensão e dor alta)</option>
+                                <option value="costela">Costela / Flanco (Alta movimentação e dor)</option>
+                                <option value="pescoco">Pescoço / Garganta (Área nobre e sensível)</option>
+                                <option value="mao_pe">Mãos / Dedos / Pés (Pigmentação delicada)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Estilo & Detalhes -->
+                    <div class="calc-card-section">
+                        <div class="calc-section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            <span>3. Estilo & Nível de Detalhe</span>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex:1.2;">
+                                <label for="calcEstilo" style="font-size:0.75rem;">Estilo da Tattoo</label>
+                                <select id="calcEstilo" class="input-field">
+                                    <option value="blackwork">🖤 Blackwork & Sombra</option>
+                                    <option value="fineline">🌿 Fine Line Delicado</option>
+                                    <option value="realismo">👁️ Realismo / Hiper-realismo</option>
+                                    <option value="lettering">✍️ Lettering / Escrita</option>
+                                    <option value="oldschool">⚓ Old School / Tradicional</option>
+                                    <option value="colorida">🎨 Colorida / Aquarela</option>
+                                    <option value="geometrico">📐 Geométrico & Pontilhismo</option>
+                                    <option value="coverup">🔄 Cobertura (Cover-up)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label for="calcComplexidade" style="font-size:0.75rem;">Complexidade</label>
+                                <select id="calcComplexidade" class="input-field">
+                                    <option value="baixa">Minimalista (Traço simples)</option>
+                                    <option value="media" selected>Média (Sombra e texturas)</option>
+                                    <option value="alta">Alta (Hiper-detalhes exclusivos)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Parâmetros de Precificação -->
+                        <div class="form-row" style="margin-top:4px;">
+                            <div class="form-group" style="flex:1;">
+                                <label for="calcValorHora" style="font-size:0.75rem;">Seu Valor/Hora (R$)</label>
+                                <div style="display:flex; gap:6px;">
+                                    <input type="number" id="calcValorHora" class="input-field" step="10" min="50" value="180">
+                                    <button type="button" class="btn-secondary btn-sm" id="btnSalvarValorHora" title="Salvar este valor/hora como seu padrão">Salvar</button>
+                                </div>
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label for="calcPercentualSinal" style="font-size:0.75rem;">Sinal de Reserva</label>
+                                <select id="calcPercentualSinal" class="input-field">
+                                    <option value="30">30% de Sinal</option>
+                                    <option value="40">40% de Sinal</option>
+                                    <option value="50">50% de Sinal</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna 2: Resultados em Tempo Real & Proposta WhatsApp -->
+                <div class="calc-col-results">
+                    <!-- Resumo Técnico de Bancada -->
+                    <div class="calc-tech-summary">
+                        <div class="cts-item">
+                            <span class="cts-label">⏱️ Tempo Estimado</span>
+                            <strong class="cts-val" id="calcTempoDisplay">2h 30min</strong>
+                            <small class="cts-sub" id="calcSessoesDisplay">1 sessão</small>
+                        </div>
+                        <div class="cts-item">
+                            <span class="cts-label">📦 Custo de Insumos</span>
+                            <strong class="cts-val val-green" id="calcCustoMatDisplay">R$ 45,00</strong>
+                            <small class="cts-sub">Agulhas, tintas & EPIs</small>
+                        </div>
+                    </div>
+
+                    <!-- Card de Preço Recomendado (Destaque Ouro) -->
+                    <div class="calc-price-card">
+                        <span class="cpc-badge">PREÇO RECOMENDADO</span>
+                        <div class="cpc-main-price" id="calcValRecDisplay">R$ 550,00</div>
+                        <span class="cpc-desc">Valor justo e ideal com margem de lucro saudável</span>
+
+                        <div class="cpc-tier-grid">
+                            <div class="cpc-tier-box">
+                                <span class="cpc-tier-label">Preço Mínimo Seguro</span>
+                                <strong class="cpc-tier-val" id="calcValMinDisplay">R$ 450,00</strong>
+                            </div>
+                            <div class="cpc-tier-box">
+                                <span class="cpc-tier-label">Preço Premium / Sábado</span>
+                                <strong class="cpc-tier-val" id="calcValPremDisplay">R$ 680,00</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Condições de Pagamento / Sinal -->
+                    <div class="calc-conditions-box">
+                        <div class="ccb-item">
+                            <span>Sinal para Reserva (PIX):</span>
+                            <strong class="val-gold" id="calcSinalDisplay">R$ 160,00</strong>
+                        </div>
+                        <div class="ccb-item">
+                            <span>Restante no dia da sessão:</span>
+                            <strong id="calcRestanteDisplay">R$ 390,00</strong>
+                        </div>
+                    </div>
+
+                    <!-- Pré-visualização da Mensagem de WhatsApp -->
+                    <div class="calc-whatsapp-box">
+                        <div class="cwb-header">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" style="width:16px;height:16px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                                <strong>Proposta Pronta para o WhatsApp</strong>
+                            </div>
+                            <button type="button" class="btn-copy-tag" id="btnCopiarPropostaCalc">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                Copiar
+                            </button>
+                        </div>
+                        <textarea id="calcMensagemWhatsApp" class="input-field calc-wa-textarea" rows="6" readonly></textarea>
+                    </div>
+
+                    <!-- Botões de Ação Imediata -->
+                    <div class="calc-actions-grid">
+                        <button type="button" class="btn-whatsapp" id="btnEnviarWhatsAppCalc" style="grid-column: 1 / -1; justify-content:center; padding:12px; font-weight:700; font-size:0.92rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                            <span>Enviar Proposta no WhatsApp</span>
+                        </button>
+                        <button type="button" class="btn-primary" id="btnAgendarComOrcamento" style="justify-content:center;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;margin-right:6px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span>Agendar Sessão</span>
+                        </button>
+                        <button type="button" class="btn-secondary" id="btnSalvarCentralOrcamento" onclick="if(window.TattooCalculator) TattooCalculator.saveOrcamento()" style="justify-content:center;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            <span>Salvar em Orçamentos</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Mode Banner -->
+    <div class="demo-mode-banner" id="demoBannerMain" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span><strong>Modo Demo</strong> — Dados salvos no navegador. <a href="#" id="seedDataLink">Carregar dados de exemplo</a> | Configure o Firebase em <code>js/firebase-config.js</code></span>
+        <button class="demo-close" id="closeDemoBanner">✕</button>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts (order matters) -->
+    <script src="js/firebase-config.js?v=3.1" onerror="this.onerror=null; this.src='js/firebase-config.example.js';"></script>
+    <script src="js/auth.js?v=3.1"></script>
+    <script src="js/storage.js?v=2.5"></script>
+    <script src="js/db.js?v=3.1"></script>
+    <script src="js/pdf.js?v=2.5"></script>
+    <script src="js/notifications.js?v=2.5"></script>
+    <script src="js/whatsapp.js?v=2.5"></script>
+    <script src="js/calculator.js?v=2.8"></script>
+    <script src="app.js?v=3.1"></script>
+</body>
+</html>

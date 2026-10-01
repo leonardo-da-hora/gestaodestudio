@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GH Studio - Login">
+    <title>GH Studio | Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <!-- Left Panel: Branding -->
+        <div class="login-brand">
+            <div class="brand-content">
+                <div class="brand-logo">
+                    <img src="assets/logo.jpg" alt="GH Studio" class="login-brand-logo-img">
+                </div>
+                <h1 class="brand-title">GH Studio</h1>
+                <p class="brand-subtitle">Sistema de Gestão<br>para Estúdio de Tatuagem</p>
+                <div class="brand-features">
+                    <div class="feature">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        <span>Dashboard financeiro completo</span>
+                    </div>
+                    <div class="feature">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span>Agenda de sessões integrada</span>
+                    </div>
+                    <div class="feature">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        <span>Controle de caixa e sinais</span>
+                    </div>
+                    <div class="feature">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        <span>Gestão completa de clientes</span>
+                    </div>
+                </div>
+            </div>
+            <div class="brand-decoration">
+                <div class="deco-circle deco-1"></div>
+                <div class="deco-circle deco-2"></div>
+                <div class="deco-circle deco-3"></div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Auth Forms -->
+        <div class="login-form-panel">
+            <!-- Demo Mode Banner -->
+            <div class="demo-banner" id="demoBanner" style="display:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <span><strong>Modo Demo</strong> — Dados salvos localmente. Configure o Firebase para sincronizar na nuvem.</span>
+            </div>
+
+            <!-- Login Form -->
+            <div class="auth-form active" id="formLogin">
+                <div class="form-header">
+                    <h2>Bem-vindo de volta</h2>
+                    <p>Entre com suas credenciais para acessar o sistema</p>
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            <input type="email" id="loginEmail" placeholder="seu@email.com" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Senha</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <input type="password" id="loginPassword" placeholder="••••••••" required minlength="6">
+                            <button type="button" class="toggle-password" id="toggleLoginPw" tabindex="-1">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-extras">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="rememberMe" checked>
+                            <span class="checkmark"></span>
+                            Lembrar de mim
+                        </label>
+                        <button type="button" class="link-btn" id="showReset">Esqueceu a senha?</button>
+                    </div>
+
+                    <div class="error-message" id="loginError"></div>
+
+                    <button type="submit" class="btn-submit" id="btnLogin">
+                        <span>Entrar</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </button>
+                </form>
+
+                <div class="form-footer">
+                    <span>Não tem uma conta?</span>
+                    <button type="button" class="link-btn" id="showRegister">Criar conta</button>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div class="auth-form" id="formRegister">
+                <div class="form-header">
+                    <h2>Criar sua conta</h2>
+                    <p>Comece a gerenciar seu estúdio agora</p>
+                </div>
+
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="regName">Nome completo</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <input type="text" id="regName" placeholder="Seu nome" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="regEmail">Email</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            <input type="email" id="regEmail" placeholder="seu@email.com" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="regPassword">Senha</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres" required minlength="6">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="regPasswordConfirm">Confirmar senha</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <input type="password" id="regPasswordConfirm" placeholder="Repita a senha" required minlength="6">
+                        </div>
+                    </div>
+
+                    <div class="error-message" id="registerError"></div>
+
+                    <button type="submit" class="btn-submit" id="btnRegister">
+                        <span>Criar conta</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </button>
+                </form>
+
+                <div class="form-footer">
+                    <span>Já tem uma conta?</span>
+                    <button type="button" class="link-btn" id="backToLogin">Fazer login</button>
+                </div>
+            </div>
+
+            <!-- Reset Password Form -->
+            <div class="auth-form" id="formReset">
+                <div class="form-header">
+                    <h2>Recuperar senha</h2>
+                    <p>Digite seu email para receber o link de recuperação</p>
+                </div>
+
+                <form id="resetForm">
+                    <div class="form-group">
+                        <label for="resetEmail">Email</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            <input type="email" id="resetEmail" placeholder="seu@email.com" required>
+                        </div>
+                    </div>
+
+                    <div class="error-message" id="resetError"></div>
+                    <div class="success-message" id="resetSuccess"></div>
+
+                    <button type="submit" class="btn-submit" id="btnReset">
+                        <span>Enviar link</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </button>
+                </form>
+
+                <div class="form-footer">
+                    <span>Lembrou a senha?</span>
+                    <button type="button" class="link-btn" id="backToLoginFromReset">Voltar ao login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+    <script src="js/firebase-config.js?v=3.1" onerror="this.onerror=null; this.src='js/firebase-config.example.js';"></script>
+    <script src="js/auth.js?v=3.1"></script>
+    <script>
+        // ── Page Logic ──
+        document.addEventListener('DOMContentLoaded', () => {
+            // Show demo banner
+            if (IS_DEMO_MODE) {
+                document.getElementById('demoBanner').style.display = 'flex';
+            }
+
+            // Check if already logged in
+            Auth.init(
+                (user) => { window.location.href = 'index.html'; },
+                () => { /* Not logged in, stay on login page */ }
+            );
+
+            // ── Form switching ──
+            const showForm = (id) => {
+                document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+                // Clear errors
+                document.querySelectorAll('.error-message, .success-message').forEach(e => e.textContent = '');
+            };
+
+            document.getElementById('showRegister').addEventListener('click', () => showForm('formRegister'));
+            document.getElementById('showReset').addEventListener('click', () => showForm('formReset'));
+            document.getElementById('backToLogin').addEventListener('click', () => showForm('formLogin'));
+            document.getElementById('backToLoginFromReset').addEventListener('click', () => showForm('formLogin'));
+
+            // ── Toggle password visibility ──
+            document.getElementById('toggleLoginPw').addEventListener('click', () => {
+                const input = document.getElementById('loginPassword');
+                input.type = input.type === 'password' ? 'text' : 'password';
+            });
+
+            // ── Login ──
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btnLogin');
+                const errorEl = document.getElementById('loginError');
+                errorEl.textContent = '';
+                btn.classList.add('loading');
+                btn.disabled = true;
+
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+
+                const result = await Auth.login(email, password);
+
+                if (result.success) {
+                    window.location.href = 'index.html';
+                } else {
+                    errorEl.textContent = result.error;
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }
+            });
+
+            // ── Register ──
+            document.getElementById('registerForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btnRegister');
+                const errorEl = document.getElementById('registerError');
+                errorEl.textContent = '';
+
+                const name = document.getElementById('regName').value;
+                const email = document.getElementById('regEmail').value;
+                const password = document.getElementById('regPassword').value;
+                const confirmPw = document.getElementById('regPasswordConfirm').value;
+
+                if (password !== confirmPw) {
+                    errorEl.textContent = 'As senhas não coincidem.';
+                    return;
+                }
+
+                btn.classList.add('loading');
+                btn.disabled = true;
+
+                const result = await Auth.register(name, email, password);
+
+                if (result.success) {
+                    window.location.href = 'index.html';
+                } else {
+                    errorEl.textContent = result.error;
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }
+            });
+
+            // ── Reset Password ──
+            document.getElementById('resetForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btnReset');
+                const errorEl = document.getElementById('resetError');
+                const successEl = document.getElementById('resetSuccess');
+                errorEl.textContent = '';
+                successEl.textContent = '';
+
+                btn.classList.add('loading');
+                btn.disabled = true;
+
+                const email = document.getElementById('resetEmail').value;
+                const result = await Auth.resetPassword(email);
+
+                if (result.success) {
+                    successEl.textContent = result.message;
+                } else {
+                    errorEl.textContent = result.error;
+                }
+
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>

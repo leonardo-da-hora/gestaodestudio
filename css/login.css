@@ -1,0 +1,541 @@
+/* =========================================================
+   GH Studio — Login Page Styles
+   ========================================================= */
+
+/* ── Variables (same as main app) ── */
+:root {
+    --bg-primary: #0A0A0B;
+    --bg-secondary: #111113;
+    --bg-card: #16161A;
+    --bg-card-hover: #1C1C21;
+    --bg-elevated: #1E1E24;
+    --bg-input: #1A1A1F;
+    --border-primary: #2A2A30;
+    --border-subtle: #222228;
+    --border-focus: #F5C518;
+    --text-primary: #F0F0F0;
+    --text-secondary: #9A9AA0;
+    --text-tertiary: #6B6B72;
+    --text-inverse: #0A0A0B;
+    --accent: #F5C518;
+    --accent-hover: #FFD23F;
+    --accent-dim: rgba(245, 197, 24, 0.15);
+    --accent-glow: rgba(245, 197, 24, 0.25);
+    --green: #34D399;
+    --red: #F87171;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s ease;
+    --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.6);
+    --shadow-glow: 0 0 20px rgba(245, 197, 24, 0.1);
+}
+
+/* ── Reset ── */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Login Container ── */
+.login-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ── Left Panel: Branding ── */
+.login-brand {
+    width: 45%;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    border-right: 1px solid var(--border-subtle);
+}
+
+.brand-content {
+    position: relative;
+    z-index: 2;
+    padding: 60px;
+    max-width: 480px;
+}
+
+.login-brand-logo-img {
+    width: 84px;
+    height: 84px;
+    border-radius: var(--radius-lg);
+    object-fit: cover;
+    border: 2px solid rgba(245, 197, 24, 0.4);
+    box-shadow: 0 0 24px rgba(245, 197, 24, 0.25);
+    margin-bottom: 24px;
+    display: block;
+}
+
+.brand-logo .logo-icon {
+    display: inline-block;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 16px 24px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(245, 197, 24, 0.2);
+    letter-spacing: -0.04em;
+    margin-bottom: 24px;
+}
+
+.brand-title {
+    font-size: 2.8rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--text-primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.brand-subtitle {
+    font-size: 1.15rem;
+    color: var(--text-tertiary);
+    line-height: 1.5;
+    margin-bottom: 48px;
+}
+
+.brand-features {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.feature svg {
+    width: 20px;
+    height: 20px;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+/* ── Decorative Elements ── */
+.brand-decoration {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.deco-circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(245, 197, 24, 0.06);
+}
+
+.deco-1 {
+    width: 500px;
+    height: 500px;
+    bottom: -200px;
+    right: -200px;
+    background: radial-gradient(circle, rgba(245, 197, 24, 0.04) 0%, transparent 70%);
+}
+
+.deco-2 {
+    width: 300px;
+    height: 300px;
+    top: -100px;
+    left: -100px;
+    background: radial-gradient(circle, rgba(245, 197, 24, 0.03) 0%, transparent 70%);
+}
+
+.deco-3 {
+    width: 150px;
+    height: 150px;
+    top: 40%;
+    right: 10%;
+    border: 1px solid rgba(245, 197, 24, 0.08);
+}
+
+/* ── Right Panel: Forms ── */
+.login-form-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    position: relative;
+}
+
+/* ── Demo Banner ── */
+.demo-banner {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(245, 197, 24, 0.2);
+    border-radius: var(--radius-md);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    max-width: 90%;
+    text-align: left;
+}
+
+.demo-banner svg {
+    width: 20px;
+    height: 20px;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+.demo-banner strong {
+    color: var(--accent);
+}
+
+/* ── Auth Forms ── */
+.auth-form {
+    width: 100%;
+    max-width: 420px;
+    display: none;
+    animation: fadeSlideIn 0.35s ease;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-header {
+    margin-bottom: 36px;
+}
+
+.form-header h2 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+}
+
+.form-header p {
+    color: var(--text-tertiary);
+    font-size: 0.925rem;
+}
+
+/* ── Form Groups ── */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    background: var(--bg-input);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    padding: 0 14px;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.input-wrapper svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.input-wrapper input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 12px 0;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+.input-wrapper input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.toggle-password {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--text-tertiary);
+    transition: color var(--transition-fast);
+}
+
+.toggle-password:hover {
+    color: var(--text-primary);
+}
+
+.toggle-password svg {
+    margin-right: 0;
+}
+
+/* ── Form Extras ── */
+.form-extras {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    background: var(--bg-input);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.checkbox-label input:checked + .checkmark {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.checkbox-label input:checked + .checkmark::after {
+    content: '✓';
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-inverse);
+}
+
+.link-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.link-btn:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+}
+
+/* ── Error/Success Messages ── */
+.error-message, .success-message {
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0;
+    margin-bottom: 16px;
+    border-radius: var(--radius-sm);
+    min-height: 0;
+    transition: all var(--transition-normal);
+}
+
+.error-message:not(:empty) {
+    padding: 10px 14px;
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    color: var(--red);
+}
+
+.success-message:not(:empty) {
+    padding: 10px 14px;
+    background: rgba(52, 211, 153, 0.1);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    color: var(--green);
+}
+
+/* ── Submit Button ── */
+.btn-submit {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px;
+    background: var(--accent);
+    color: var(--text-inverse);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.btn-submit svg {
+    width: 18px;
+    height: 18px;
+    transition: transform var(--transition-fast);
+}
+
+.btn-submit:hover {
+    background: var(--accent-hover);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-1px);
+}
+
+.btn-submit:hover svg {
+    transform: translateX(4px);
+}
+
+.btn-submit:active {
+    transform: translateY(0);
+}
+
+.btn-submit.loading {
+    pointer-events: none;
+    opacity: 0.75;
+}
+
+.btn-submit.loading span {
+    visibility: hidden;
+}
+
+.btn-submit.loading svg {
+    visibility: hidden;
+}
+
+.btn-submit.loading::after {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border: 3px solid rgba(10, 10, 11, 0.3);
+    border-top-color: var(--text-inverse);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Form Footer ── */
+.form-footer {
+    text-align: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+}
+
+.form-footer .link-btn {
+    margin-left: 4px;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 900px) {
+    .login-brand {
+        display: none;
+    }
+
+    .login-form-panel {
+        padding: 24px;
+    }
+
+    .login-form-panel::before {
+        content: '';
+        display: block;
+        width: 100%;
+        max-width: 420px;
+        margin-bottom: 40px;
+    }
+
+    /* Show compact branding on mobile */
+    .auth-form .form-header::before {
+        content: 'GH';
+        display: block;
+        font-size: 1.8rem;
+        font-weight: 900;
+        color: var(--accent);
+        background: var(--accent-dim);
+        width: 60px;
+        height: 60px;
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(245, 197, 24, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-header h2 {
+        font-size: 1.4rem;
+    }
+
+    .demo-banner {
+        font-size: 0.75rem;
+        padding: 8px 14px;
+    }
+}
