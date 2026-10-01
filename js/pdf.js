@@ -269,6 +269,333 @@ const PDFExport = {
         }
     },
 
+    // ── 1.1 Fechamento Mensal / DRE & Balancete Contábil do Estúdio ──
+    async generateMonthlyDRE(yearMonth = null) {
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const ym = yearMonth || (typeof currentDashYearMonth !== 'undefined' ? currentDashYearMonth : new Date().toISOString().slice(0, 7));
+            const [y, m] = ym.split('-').map(Number);
+            const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            const mesNome = meses[m - 1] || ym;
+            const periodStr = `${mesNome} de ${y}`;
+
+            const transacoes = await DataStore.getTransacoes();
+            const monthTx = transacoes.filter(t => {
+                if (!t.data) return false;
+                const parts = t.data.split('-');
+                return parseInt(parts[0], 10) === y && parseInt(parts[1], 10) === m;
+            });
+
+            // Categorize revenues
+            const entradasValidas = monthTx.filter(t => t.tipo === 'entrada' && t.status !== 'cancelado');
+            const recTattoos = entradasValidas
+                .filter(t => t.categoria !== 'sinal' && !String(t.descricao || '').toLowerCase().includes('sinal'))
+                .reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const recSinais = entradasValidas
+                .filter(t => t.categoria === 'sinal' || String(t.descricao || '').toLowerCase().includes('sinal'))
+                .reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const recTotal = recTattoos + recSinais;
+
+            // Categorize variable costs (Materiais e EPIs)
+            const saidas = monthTx.filter(t => t.tipo === 'saida');
+            const custoMateriais = saidas
+                .filter(t => t.categoria === 'materiais')
+                .reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const custoEpi = saidas
+                .filter(t => t.categoria === 'epi')
+                .reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const custoVariavelTotal = custoMateriais + custoEpi;
+
+            // Margem Bruta
+            const margemBruta = recTotal - custoVariavelTotal;
+            const percMargemBruta = recTotal > 0 ? ((margemBruta / recTotal) * 100).toFixed(1) : '0.0';
+
+            // Fixed and operational expenses
+            const despAluguel = saidas.filter(t => t.categoria === 'aluguel').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const despEnergia = saidas.filter(t => t.categoria === 'energia').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const despInternet = saidas.filter(t => t.categoria === 'internet').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const despManut = saidas.filter(t => t.categoria === 'manutencao').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const despOutros = saidas.filter(t => !['materiais', 'epi', 'aluguel', 'energia', 'internet', 'manutencao'].includes(t.categoria)).reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const despFixaTotal = despAluguel + despEnergia + despInternet + despManut + despOutros;
+
+            // Lucro Líquido
+            const despesasTotal = custoVariavelTotal + despFixaTotal;
+            const lucroLiquido = recTotal - despesasTotal;
+            const percLucro = recTotal > 0 ? ((lucroLiquido / recTotal) * 100).toFixed(1) : '0.0';
+
+            // Draw Header
+            this._drawHeader(doc, 'Fechamento Mensal / DRE', `Competência: ${periodStr}`);
+
+            let yPos = 46;
+
+            // KPI Summary Boxes
+            const boxW = 43;
+            const boxH = 20;
+            const kpis = [
+                { label: 'Faturamento Bruto', val: this._formatCurrency(recTotal), color: [16, 185, 129] },
+                { label: 'Custos & Despesas', val: this._formatCurrency(despesasTotal), color: [239, 68, 68] },
+                { label: 'Lucro Líquido', val: this._formatCurrency(lucroLiquido), color: lucroLiquido >= 0 ? [245, 197, 24] : [239, 68, 68] },
+                { label: 'Margem Líquida', val: `${percLucro}%`, color: [59, 130, 246] }
+            ];
+
+            kpis.forEach((kpi, idx) => {
+                const xPos = 14 + (idx * (boxW + 6));
+                doc.setFillColor(24, 24, 30);
+                doc.setDrawColor(kpi.color[0], kpi.color[1], kpi.color[2]);
+                doc.setLineWidth(0.6);
+                doc.roundedRect(xPos, yPos, boxW, boxH, 2, 2, 'FD');
+
+                doc.setFontSize(7.5);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(170, 170, 175);
+                doc.text(kpi.label, xPos + 4, yPos + 6);
+
+                doc.setFontSize(10.5);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(kpi.color[0], kpi.color[1], kpi.color[2]);
+                doc.text(kpi.val, xPos + 4, yPos + 15);
+            });
+
+            yPos += 26;
+
+            // Section 1: Demonstrativo DRE (Tabela Estruturada)
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(20, 20, 25);
+            doc.text('1. Demonstrativo do Resultado do Exercício (DRE)', 14, yPos);
+            yPos += 4;
+
+            const dreRows = [
+                ['(+) RECEITA BRUTA OPERACIONAL', this._formatCurrency(recTotal), '100.0%'],
+                ['      Tatuagens e Sessões Concluídas', this._formatCurrency(recTattoos), recTotal > 0 ? ((recTattoos / recTotal) * 100).toFixed(1) + '%' : '0%'],
+                ['      Sinais e Adiantamentos de Agendamento', this._formatCurrency(recSinais), recTotal > 0 ? ((recSinais / recTotal) * 100).toFixed(1) + '%' : '0%'],
+                ['(-) CUSTOS OPERACIONAIS VARIÁVEIS', this._formatCurrency(custoVariavelTotal), recTotal > 0 ? ((custoVariavelTotal / recTotal) * 100).toFixed(1) + '%' : '0%'],
+                ['      Tintas, Agulhas e Materiais de Bancada', this._formatCurrency(custoMateriais), recTotal > 0 ? ((custoMateriais / recTotal) * 100).toFixed(1) + '%' : '0%'],
+                ['      EPIs e Descartáveis (Luvas, Máscaras, Aventais)', this._formatCurrency(custoEpi), recTotal > 0 ? ((custoEpi / recTotal) * 100).toFixed(1) + '%' : '0%'],
+                ['(=) MARGEM BRUTA DE CONTRIBUIÇÃO', this._formatCurrency(margemBruta), percMargemBruta + '%'],
+                ['(-) DESPESAS OPERACIONAIS FIXAS', this._formatCurrency(despFixaTotal), recTotal > 0 ? ((despFixaTotal / recTotal) * 100).toFixed(1) + '%' : '0%'],
+                ['      Aluguel do Espaço / Estúdio', this._formatCurrency(despAluguel), recTotal > 0 ? ((despAluguel / recTotal) * 100).toFixed(1) + '%' : '0%'],
+                ['      Energia Elétrica', this._formatCurrency(despEnergia), recTotal > 0 ? ((despEnergia / recTotal) * 100).toFixed(1) + '%' : '0%'],
+                ['      Internet Fibra e Telefonia', this._formatCurrency(despInternet), recTotal > 0 ? ((despInternet / recTotal) * 100).toFixed(1) + '%' : '0%'],
+                ['      Manutenção de Máquinas e Equipamentos', this._formatCurrency(despManut), recTotal > 0 ? ((despManut / recTotal) * 100).toFixed(1) + '%' : '0%'],
+                ['      Outras Despesas e Serviços', this._formatCurrency(despOutros), recTotal > 0 ? ((despOutros / recTotal) * 100).toFixed(1) + '%' : '0%'],
+                ['(=) RESULTADO OPERACIONAL LÍQUIDO (LUCRO)', this._formatCurrency(lucroLiquido), percLucro + '%']
+            ];
+
+            doc.autoTable({
+                startY: yPos,
+                head: [['Rubrica Contábil / Classificação', 'Valor Realizado (R$)', '% da Receita']],
+                body: dreRows,
+                theme: 'striped',
+                headStyles: {
+                    fillColor: [20, 20, 25],
+                    textColor: [245, 197, 24],
+                    fontStyle: 'bold',
+                    fontSize: 8.5
+                },
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 2.2,
+                    textColor: [40, 40, 45]
+                },
+                columnStyles: {
+                    0: { cellWidth: 115 },
+                    1: { cellWidth: 40, halign: 'right' },
+                    2: { cellWidth: 27, halign: 'center' }
+                },
+                didParseCell: function(data) {
+                    const text = data.cell.raw || '';
+                    if (typeof text === 'string' && (text.startsWith('(=)') || text.startsWith('(+)'))) {
+                        data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.textColor = [15, 23, 42];
+                        if (text.includes('LUCRO')) {
+                            data.cell.styles.fillColor = [254, 243, 199];
+                            data.cell.styles.textColor = [180, 83, 9];
+                        }
+                    }
+                }
+            });
+
+            // Section 2: Detalhamento de Movimentações do Mês
+            yPos = doc.lastAutoTable.finalY + 12;
+            if (yPos > 240) {
+                doc.addPage();
+                yPos = 20;
+            }
+
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(20, 20, 25);
+            doc.text(`2. Lançamentos Detalhados do Mês (${monthTx.length} registros)`, 14, yPos);
+            yPos += 4;
+
+            const txHeaders = ['Data', 'Tipo', 'Categoria', 'Descrição', 'Cliente / Fornecedor', 'Método', 'Valor'];
+            const txRows = monthTx.map(t => [
+                this._formatDate(t.data),
+                t.tipo === 'entrada' ? 'Entrada' : 'Saída',
+                t.categoria || (t.tipo === 'entrada' ? 'Sessão' : 'Geral'),
+                t.descricao || '-',
+                t.cliente || '-',
+                (t.metodo || 'PIX').toUpperCase(),
+                (t.tipo === 'saida' ? '- ' : '+ ') + this._formatCurrency(t.valor)
+            ]);
+
+            doc.autoTable({
+                startY: yPos,
+                head: [txHeaders],
+                body: txRows,
+                theme: 'striped',
+                headStyles: {
+                    fillColor: [30, 41, 59],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    fontSize: 8
+                },
+                styles: {
+                    fontSize: 7.5,
+                    cellPadding: 2
+                },
+                columnStyles: {
+                    0: { cellWidth: 20 },
+                    1: { cellWidth: 16 },
+                    2: { cellWidth: 22 },
+                    3: { cellWidth: 46 },
+                    4: { cellWidth: 34 },
+                    5: { cellWidth: 18 },
+                    6: { cellWidth: 26, halign: 'right' }
+                },
+                didParseCell: function(data) {
+                    if (data.column.index === 1) {
+                        data.cell.styles.textColor = data.cell.raw === 'Entrada' ? [16, 185, 129] : [239, 68, 68];
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                    if (data.column.index === 6) {
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+            });
+
+            // Signatures block
+            let finalY = doc.lastAutoTable.finalY + 16;
+            if (finalY > 255) {
+                doc.addPage();
+                finalY = 30;
+            }
+
+            doc.setDrawColor(180, 180, 180);
+            doc.setLineWidth(0.4);
+            doc.line(20, finalY + 15, 90, finalY + 15);
+            doc.line(120, finalY + 15, 190, finalY + 15);
+
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(80, 80, 85);
+            doc.text('Responsável Financeiro', 55, finalY + 20, { align: 'center' });
+            doc.text('Leonardo Da Hora / GH Studio', 55, finalY + 24, { align: 'center' });
+
+            doc.text('Data do Fechamento', 155, finalY + 20, { align: 'center' });
+            doc.text(new Date().toLocaleDateString('pt-BR'), 155, finalY + 24, { align: 'center' });
+
+            this._drawFooters(doc);
+            this._savePDF(doc, `GH_Studio_DRE_Fechamento_${ym}.pdf`);
+            showToast(`DRE de ${periodStr} exportado com sucesso!`, 'success');
+            return true;
+        } catch (e) {
+            console.error('Error generating monthly DRE:', e);
+            showToast('Erro ao gerar DRE em PDF: ' + e.message, 'error');
+            return false;
+        }
+    },
+
+    // ── 1.2 Exportação de Planilha Excel / CSV do Fechamento Mensal ──
+    async exportMonthlyDRE_CSV(yearMonth = null) {
+        try {
+            const ym = yearMonth || (typeof currentDashYearMonth !== 'undefined' ? currentDashYearMonth : new Date().toISOString().slice(0, 7));
+            const [y, m] = ym.split('-').map(Number);
+            const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            const mesNome = meses[m - 1] || ym;
+            const periodStr = `${mesNome} de ${y}`;
+
+            const transacoes = await DataStore.getTransacoes();
+            const monthTx = transacoes.filter(t => {
+                if (!t.data) return false;
+                const parts = t.data.split('-');
+                return parseInt(parts[0], 10) === y && parseInt(parts[1], 10) === m;
+            });
+
+            const entradasValidas = monthTx.filter(t => t.tipo === 'entrada' && t.status !== 'cancelado');
+            const recTattoos = entradasValidas.filter(t => t.categoria !== 'sinal' && !String(t.descricao || '').toLowerCase().includes('sinal')).reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const recSinais = entradasValidas.filter(t => t.categoria === 'sinal' || String(t.descricao || '').toLowerCase().includes('sinal')).reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const recTotal = recTattoos + recSinais;
+
+            const saidas = monthTx.filter(t => t.tipo === 'saida');
+            const custoMateriais = saidas.filter(t => t.categoria === 'materiais').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const custoEpi = saidas.filter(t => t.categoria === 'epi').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const custoVariavelTotal = custoMateriais + custoEpi;
+            const margemBruta = recTotal - custoVariavelTotal;
+
+            const despAluguel = saidas.filter(t => t.categoria === 'aluguel').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const despEnergia = saidas.filter(t => t.categoria === 'energia').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const despInternet = saidas.filter(t => t.categoria === 'internet').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const despManut = saidas.filter(t => t.categoria === 'manutencao').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const despOutros = saidas.filter(t => !['materiais', 'epi', 'aluguel', 'energia', 'internet', 'manutencao'].includes(t.categoria)).reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+            const despFixaTotal = despAluguel + despEnergia + despInternet + despManut + despOutros;
+            const despesasTotal = custoVariavelTotal + despFixaTotal;
+            const lucroLiquido = recTotal - despesasTotal;
+
+            // Build CSV with semicolon separator (standard in Brazilian Excel)
+            let csv = '\uFEFF'; // UTF-8 BOM
+            csv += 'GH STUDIO — FECHAMENTO MENSAL & DRE\n';
+            csv += `Competência:;${periodStr}\n`;
+            csv += `Data de Emissão:;${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}\n\n`;
+
+            csv += 'DEMONSTRATIVO DO RESULTADO (DRE);VALOR (R$);% DA RECEITA\n';
+            csv += `(+) RECEITA BRUTA OPERACIONAL;${recTotal.toFixed(2).replace('.', ',')};100,0%\n`;
+            csv += `  - Tatuagens e Sessões;${recTattoos.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((recTattoos / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n`;
+            csv += `  - Sinais e Adiantamentos;${recSinais.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((recSinais / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n`;
+            csv += `(-) CUSTOS OPERACIONAIS VARIÁVEIS;${custoVariavelTotal.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((custoVariavelTotal / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n`;
+            csv += `  - Materiais e Insumos;${custoMateriais.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((custoMateriais / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n`;
+            csv += `  - EPIs e Descartáveis;${custoEpi.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((custoEpi / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n`;
+            csv += `(=) MARGEM BRUTA DE CONTRIBUIÇÃO;${margemBruta.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((margemBruta / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n`;
+            csv += `(-) DESPESAS OPERACIONAIS FIXAS;${despFixaTotal.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((despFixaTotal / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n`;
+            csv += `  - Aluguel do Estúdio;${despAluguel.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((despAluguel / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n`;
+            csv += `  - Energia Elétrica;${despEnergia.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((despEnergia / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n`;
+            csv += `  - Internet e Comunicação;${despInternet.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((despInternet / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n`;
+            csv += `  - Manutenção de Máquinas;${despManut.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((despManut / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n`;
+            csv += `  - Outras Despesas;${despOutros.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((despOutros / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n`;
+            csv += `(=) RESULTADO OPERACIONAL LÍQUIDO;${lucroLiquido.toFixed(2).replace('.', ',')};${recTotal > 0 ? ((lucroLiquido / recTotal) * 100).toFixed(1).replace('.', ',') + '%' : '0%'}\n\n`;
+
+            csv += 'LANÇAMENTOS DETALHADOS DO MÊS\n';
+            csv += 'Data;Tipo;Categoria;Descrição;Cliente / Fornecedor;Método;Valor (R$);Status\n';
+
+            monthTx.forEach(t => {
+                const dataFormat = t.data ? t.data.split('-').reverse().join('/') : '-';
+                const valorFormat = (parseFloat(t.valor) || 0).toFixed(2).replace('.', ',');
+                csv += `"${dataFormat}";"${t.tipo === 'entrada' ? 'Entrada' : 'Saída'}";"${t.categoria || '-'}";"${(t.descricao || '').replace(/"/g, '""')}";"${(t.cliente || '-').replace(/"/g, '""')}";"${(t.metodo || 'PIX').toUpperCase()}";"${valorFormat}";"${t.status || '-'}"\n`;
+            });
+
+            // Trigger download
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `GH_Studio_Fechamento_${ym}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast(`Planilha CSV de ${periodStr} exportada com sucesso!`, 'success');
+            return true;
+        } catch (e) {
+            console.error('Error exporting CSV:', e);
+            showToast('Erro ao exportar planilha CSV: ' + e.message, 'error');
+            return false;
+        }
+    },
+
     // ── 2. Ficha do Cliente & Histórico Completo ──
     async generateClientReport(clienteId) {
         try {

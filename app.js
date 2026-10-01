@@ -322,6 +322,170 @@ function setupMetaModal() {
     });
 }
 
+// =========================================================
+// FECHAMENTO MENSAL & DRE DO ESTÚDIO
+// =========================================================
+
+async function renderDREModalContent(targetYM) {
+    const ym = targetYM || currentDashYearMonth || getTodayStr().slice(0, 7);
+    const monthInfo = formatDashMonth(ym);
+    const [y, m] = ym.split('-').map(Number);
+
+    const subTitle = document.getElementById('fechamentoSubTitle');
+    const badge = document.getElementById('fechamentoMonthBadge');
+    const monthInput = document.getElementById('fechamentoMonthInput');
+    if (subTitle) subTitle.textContent = `Demonstrativo do Resultado do Exercício — ${monthInfo.title}`;
+    if (monthInput) monthInput.value = ym;
+    if (badge) {
+        if (monthInfo.isCurrent) {
+            badge.textContent = 'Mês Atual';
+            badge.className = 'dmb-badge';
+        } else if (monthInfo.isPast) {
+            badge.textContent = 'Mês Passado';
+            badge.className = 'dmb-badge past';
+        } else {
+            badge.textContent = 'Mês Futuro';
+            badge.className = 'dmb-badge future';
+        }
+    }
+
+    try {
+        const transacoes = await DataStore.getTransacoes();
+        const monthTx = transacoes.filter(t => {
+            if (!t.data) return false;
+            const parts = t.data.split('-');
+            return parseInt(parts[0], 10) === y && parseInt(parts[1], 10) === m;
+        });
+
+        // Revenues
+        const entradasValidas = monthTx.filter(t => t.tipo === 'entrada' && t.status !== 'cancelado');
+        const recTattoos = entradasValidas
+            .filter(t => t.categoria !== 'sinal' && !String(t.descricao || '').toLowerCase().includes('sinal'))
+            .reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+        const recSinais = entradasValidas
+            .filter(t => t.categoria === 'sinal' || String(t.descricao || '').toLowerCase().includes('sinal'))
+            .reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+        const recTotal = recTattoos + recSinais;
+
+        // Variable costs
+        const saidas = monthTx.filter(t => t.tipo === 'saida');
+        const custoMateriais = saidas
+            .filter(t => t.categoria === 'materiais')
+            .reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+        const custoEpi = saidas
+            .filter(t => t.categoria === 'epi')
+            .reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+        const custoVariavelTotal = custoMateriais + custoEpi;
+        const margemBruta = recTotal - custoVariavelTotal;
+
+        // Fixed expenses
+        const despAluguel = saidas.filter(t => t.categoria === 'aluguel').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+        const despEnergia = saidas.filter(t => t.categoria === 'energia').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+        const despInternet = saidas.filter(t => t.categoria === 'internet').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+        const despManut = saidas.filter(t => t.categoria === 'manutencao').reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+        const despOutros = saidas.filter(t => !['materiais', 'epi', 'aluguel', 'energia', 'internet', 'manutencao'].includes(t.categoria)).reduce((acc, t) => acc + (parseFloat(t.valor) || 0), 0);
+        const despFixaTotal = despAluguel + despEnergia + despInternet + despManut + despOutros;
+        const despesasTotal = custoVariavelTotal + despFixaTotal;
+        const lucroLiquido = recTotal - despesasTotal;
+        const percLucro = recTotal > 0 ? ((lucroLiquido / recTotal) * 100).toFixed(1) : '0.0';
+
+        // Update KPI boxes
+        const elRec = document.getElementById('dreValReceita');
+        const elDesp = document.getElementById('dreValDespesas');
+        const elLuc = document.getElementById('dreValLucro');
+        const elMargem = document.getElementById('dreValMargem');
+        if (elRec) elRec.textContent = formatCurrency(recTotal);
+        if (elDesp) elDesp.textContent = formatCurrency(despesasTotal);
+        if (elLuc) elLuc.textContent = formatCurrency(lucroLiquido);
+        if (elMargem) elMargem.textContent = `${percLucro}%`;
+
+        // Render DRE Table
+        const tbody = document.getElementById('drePreviewTbody');
+        if (!tbody) return;
+
+        const dreLines = [
+            { text: '(+) RECEITA BRUTA OPERACIONAL', val: recTotal, bold: true, color: 'var(--green)' },
+            { text: '   • Tatuagens e Sessões Concluídas', val: recTattoos, indent: true },
+            { text: '   • Sinais de Agendamentos Recebidos', val: recSinais, indent: true },
+            { text: '(-) CUSTOS OPERACIONAIS VARIÁVEIS', val: custoVariavelTotal, bold: true, color: 'var(--red)', negative: true },
+            { text: '   • Tintas, Agulhas e Materiais de Bancada', val: custoMateriais, indent: true, negative: true },
+            { text: '   • EPIs e Descartáveis (Luvas, Máscaras)', val: custoEpi, indent: true, negative: true },
+            { text: '(=) MARGEM BRUTA DE CONTRIBUIÇÃO', val: margemBruta, bold: true, color: 'var(--accent)' },
+            { text: '(-) DESPESAS OPERACIONAIS FIXAS', val: despFixaTotal, bold: true, color: 'var(--red)', negative: true },
+            { text: '   • Aluguel do Estúdio', val: despAluguel, indent: true, negative: true },
+            { text: '   • Energia Elétrica', val: despEnergia, indent: true, negative: true },
+            { text: '   • Internet e Telefonia', val: despInternet, indent: true, negative: true },
+            { text: '   • Manutenção de Máquinas e Equipamentos', val: despManut, indent: true, negative: true },
+            { text: '   • Outras Despesas Operacionais', val: despOutros, indent: true, negative: true },
+            { text: '(=) RESULTADO OPERACIONAL LÍQUIDO (LUCRO)', val: lucroLiquido, bold: true, color: lucroLiquido >= 0 ? 'var(--accent)' : 'var(--red)', highlight: true }
+        ];
+
+        tbody.innerHTML = dreLines.map(line => {
+            const perc = recTotal > 0 ? ((Math.abs(line.val) / recTotal) * 100).toFixed(1) + '%' : '-';
+            const valStr = (line.negative && line.val > 0 ? '- ' : '') + formatCurrency(line.val);
+            const rowStyle = line.highlight ? 'background:rgba(245,197,24,0.12); font-weight:800; font-size:0.9rem;' : (line.bold ? 'font-weight:700;' : 'color:var(--text-secondary);');
+            return `
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.04); ${rowStyle}">
+                    <td style="padding:6px 8px; ${line.color ? 'color:' + line.color : ''}">${line.text}</td>
+                    <td style="padding:6px 8px; text-align:right; ${line.color ? 'color:' + line.color : ''}">${valStr}</td>
+                    <td style="padding:6px 8px; text-align:center; color:var(--text-tertiary);">${perc}</td>
+                </tr>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('Error rendering DRE preview:', err);
+    }
+}
+
+function setupFechamentoModal() {
+    const modal = document.getElementById('modalFechamentoOverlay');
+    const closeBtn = document.getElementById('modalFechamentoClose');
+    const cancelBtn = document.getElementById('btnCancelFechamento');
+    const monthInput = document.getElementById('fechamentoMonthInput');
+
+    const btnOpenDash = document.getElementById('btnOpenFechamentoDash');
+    const btnOpenFin = document.getElementById('btnOpenFechamentoFin');
+
+    const btnPDF = document.getElementById('btnExportPDF_DRE');
+    const btnCSV = document.getElementById('btnExportCSV_DRE');
+
+    const openModalDRE = (ym) => {
+        const targetYM = ym || currentDashYearMonth || getTodayStr().slice(0, 7);
+        if (monthInput) monthInput.value = targetYM;
+        renderDREModalContent(targetYM);
+        openModal(modal);
+    };
+
+    btnOpenDash?.addEventListener('click', () => openModalDRE(currentDashYearMonth));
+    btnOpenFin?.addEventListener('click', () => openModalDRE(currentDashYearMonth));
+
+    closeBtn?.addEventListener('click', () => closeModal(modal));
+    cancelBtn?.addEventListener('click', () => closeModal(modal));
+    modal?.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal(modal);
+    });
+
+    monthInput?.addEventListener('change', (e) => {
+        if (e.target.value) {
+            renderDREModalContent(e.target.value);
+        }
+    });
+
+    btnPDF?.addEventListener('click', async () => {
+        const ym = monthInput?.value || currentDashYearMonth;
+        if (window.PDFExport && typeof PDFExport.generateMonthlyDRE === 'function') {
+            await PDFExport.generateMonthlyDRE(ym);
+        }
+    });
+
+    btnCSV?.addEventListener('click', async () => {
+        const ym = monthInput?.value || currentDashYearMonth;
+        if (window.PDFExport && typeof PDFExport.exportMonthlyDRE_CSV === 'function') {
+            await PDFExport.exportMonthlyDRE_CSV(ym);
+        }
+    });
+}
+
 let currentChartPeriod = '6m';
 
 async function renderChart(period = currentChartPeriod) {
@@ -3537,4 +3701,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnExportPDF) {
         btnExportPDF.addEventListener('click', generatePDFReport);
     }
+
+    // ── Fechamento Mensal / DRE Modal ──
+    setupFechamentoModal();
 });
+
