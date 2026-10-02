@@ -8,7 +8,9 @@
       ".gitignore",
       "**/node_modules/**",
       "README.md",
-      "gh_studio_logo.jpg"
+      "gh_studio_logo.jpg",
+      "deploy.bat",
+      "**/*.bat"
     ],
     "headers": [
       {
