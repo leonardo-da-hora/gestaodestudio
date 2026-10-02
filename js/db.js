@@ -181,7 +181,7 @@ const FirestoreDB = {
 // ── Unified DataStore ──
 const DataStore = {
     _getDB() {
-        if (IS_DEMO_MODE || !db || (typeof Auth !== 'undefined' && !Auth.getUid())) {
+        if (IS_DEMO_MODE || !db || (typeof Auth !== 'undefined' && (!Auth.getUid() || Auth.currentUser?.isGuest))) {
             return LocalDB;
         }
         return FirestoreDB;
@@ -1322,7 +1322,7 @@ const DataStore = {
     // ── Check Cloud vs Local Counts ──
     async getSyncStats() {
         const collections = ['clientes', 'agendamentos', 'transacoes', 'sinais', 'valoresReceber', 'orcamentos', 'estoque'];
-        const stats = { local: 0, cloud: 0, isConnected: !IS_DEMO_MODE && !!db && !!Auth.getUid() };
+        const stats = { local: 0, cloud: 0, isConnected: !IS_DEMO_MODE && !!db && !!Auth.getUid() && !Auth.currentUser?.isGuest };
         
         collections.forEach(col => {
             const local = LocalDB._get(col);

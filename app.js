@@ -3565,7 +3565,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Show demo banner
-            if (IS_DEMO_MODE) {
+            if (IS_DEMO_MODE || user.isGuest) {
                 document.getElementById('demoBannerMain').style.display = 'flex';
             }
 

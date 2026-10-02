@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="GH Studio">
     <link rel="apple-touch-icon" href="assets/icon-192.png">
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
-    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/login.css?v=3.3">
 </head>
 <body>
     <div class="login-container">
@@ -119,6 +119,11 @@
                     <span>Entrar com Google</span>
                 </button>
 
+                <button type="button" class="btn-demo" id="btnDemoLogin">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span>Entrar como Convidado (Modo Demonstração)</span>
+                </button>
+
                 <div class="form-footer">
                     <span>Não tem uma conta?</span>
                     <button type="button" class="link-btn" id="showRegister">Criar conta</button>
@@ -184,6 +189,11 @@
                     <span>Cadastrar com Google</span>
                 </button>
 
+                <button type="button" class="btn-demo" id="btnDemoRegister">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span>Experimentar sem cadastro (Modo Convidado)</span>
+                </button>
+
                 <div class="form-footer">
                     <span>Já tem uma conta?</span>
                     <button type="button" class="link-btn" id="backToLogin">Fazer login</button>
@@ -220,6 +230,15 @@
                     <button type="button" class="link-btn" id="backToLoginFromReset">Voltar ao login</button>
                 </div>
             </div>
+
+            <!-- Connection Status Bar -->
+            <div class="connection-status-bar" id="connectionStatusBar">
+                <div class="status-info">
+                    <span class="status-dot online" id="statusDot"></span>
+                    <span id="statusText">Conectando ao Firebase...</span>
+                </div>
+                <button type="button" class="btn-check-status" id="btnCheckStatus" title="Verificar status e diagnóstico de autenticação">Diagnóstico</button>
+            </div>
         </div>
     </div>
 
@@ -228,14 +247,68 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
-    <script src="js/firebase-config.js?v=3.1" onerror="this.onerror=null; this.src='js/firebase-config.example.js';"></script>
-    <script src="js/auth.js?v=3.1"></script>
+    <script src="js/firebase-config.js?v=3.3" onerror="this.onerror=null; this.src='js/firebase-config.example.js';"></script>
+    <script src="js/auth.js?v=3.3"></script>
     <script>
         // ── Page Logic ──
         document.addEventListener('DOMContentLoaded', () => {
             // Show demo banner
             if (IS_DEMO_MODE) {
                 document.getElementById('demoBanner').style.display = 'flex';
+            }
+
+            // Connection Status Indicator
+            const updateStatus = () => {
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+                if (!dot || !text) return;
+
+                if (!IS_DEMO_MODE && typeof auth !== 'undefined' && auth) {
+                    dot.className = 'status-dot online';
+                    text.textContent = 'Firebase Conectado (Nuvem)';
+                } else if (IS_DEMO_MODE) {
+                    dot.className = 'status-dot demo';
+                    text.textContent = 'Modo Demo (LocalStorage)';
+                } else {
+                    dot.className = 'status-dot offline';
+                    text.textContent = 'Firebase Offline / Local';
+                }
+            };
+            updateStatus();
+
+            // Interactive Diagnostics
+            document.getElementById('btnCheckStatus')?.addEventListener('click', () => {
+                const isFirebaseLoaded = typeof firebase !== 'undefined';
+                const hasAuth = typeof auth !== 'undefined' && !!auth;
+                const hostname = window.location.hostname;
+                const isProduction = hostname.includes('web.app') || hostname.includes('firebaseapp.com');
+
+                let diag = `🔍 DIAGNÓSTICO DO SISTEMA:\n\n`;
+                diag += `• Domínio Atual: ${hostname}\n`;
+                diag += `• Ambiente: ${isProduction ? 'Produção (Firebase Hosting)' : 'Local / Dev'}\n`;
+                diag += `• Firebase SDK: ${isFirebaseLoaded ? '✅ Carregado' : '❌ Falhou'}\n`;
+                diag += `• Firebase Auth: ${hasAuth ? '✅ Inicializado' : '❌ Não inicializado'}\n`;
+                diag += `• Projeto Firebase: ${typeof firebaseConfig !== 'undefined' ? firebaseConfig.projectId : 'N/A'}\n`;
+                diag += `• Modo Demo: ${IS_DEMO_MODE ? 'Sim' : 'Não (Nuvem Ativa)'}\n`;
+                diag += `• Service Worker / PWA: ${'serviceWorker' in navigator ? '✅ Suportado' : '❌ Não suportado'}\n\n`;
+                diag += `Dica: Se o login com Google falhar, verifique no Firebase Console (Authentication > Sign-in method) se o Google está 'Ativado' e se '${hostname}' está na lista de 'Domínios autorizados'.`;
+
+                alert(diag);
+            });
+
+            // Check if redirect sign-in completed
+            if (typeof auth !== 'undefined' && auth && auth.getRedirectResult) {
+                auth.getRedirectResult().then((result) => {
+                    if (result && result.user) {
+                        window.location.href = 'index.html';
+                    }
+                }).catch((error) => {
+                    console.error('Redirect sign-in error:', error);
+                    const errorEl = document.getElementById('loginError');
+                    if (errorEl) {
+                        errorEl.textContent = Auth._getErrorMessage ? Auth._getErrorMessage(error.code) : error.message;
+                    }
+                });
             }
 
             // Check if already logged in
@@ -274,8 +347,9 @@
 
                 const email = document.getElementById('loginEmail').value;
                 const password = document.getElementById('loginPassword').value;
+                const rememberMe = document.getElementById('rememberMe')?.checked ?? true;
 
-                const result = await Auth.login(email, password);
+                const result = await Auth.login(email, password, rememberMe);
 
                 if (result.success) {
                     window.location.href = 'index.html';
@@ -368,6 +442,15 @@
 
             document.getElementById('btnGoogleLogin')?.addEventListener('click', () => handleGoogleAuth('loginError', 'btnGoogleLogin'));
             document.getElementById('btnGoogleRegister')?.addEventListener('click', () => handleGoogleAuth('registerError', 'btnGoogleRegister'));
+
+            // ── Guest / Demo Login (Instant Access) ──
+            const handleGuestLogin = () => {
+                Auth.loginAsGuest();
+                window.location.href = 'index.html';
+            };
+
+            document.getElementById('btnDemoLogin')?.addEventListener('click', handleGuestLogin);
+            document.getElementById('btnDemoRegister')?.addEventListener('click', handleGuestLogin);
 
             // Register PWA Service Worker
             if ('serviceWorker' in navigator) {
