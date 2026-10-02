@@ -3717,5 +3717,157 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Fechamento Mensal / DRE Modal ──
     setupFechamentoModal();
+
+    // ── PWA & Conexão Mobile ──
+    setupPwaAndMobileConnect();
 });
+
+// =========================================================
+// PWA & Mobile Connect Integration
+// =========================================================
+
+function setupPwaAndMobileConnect() {
+    // 1. Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('GH Studio PWA ServiceWorker ativo:', reg.scope))
+                .catch(err => console.warn('PWA ServiceWorker aviso:', err));
+        });
+    }
+
+    // 2. Capture install prompt (beforeinstallprompt) for Android/Chrome/Edge
+    let deferredPrompt = null;
+    const pwaPromptWrap = document.getElementById('pwaInstallPromptWrap');
+    const btnTriggerPwa = document.getElementById('btnTriggerPwaInstall');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (pwaPromptWrap) {
+            pwaPromptWrap.style.display = 'block';
+        }
+    });
+
+    btnTriggerPwa?.addEventListener('click', async () => {
+        if (!deferredPrompt) {
+            showToast('Para instalar, utilize a opção do navegador ou adicione à tela inicial.', 'info');
+            return;
+        }
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+            showToast('GH Studio instalado como aplicativo!', 'success');
+            if (pwaPromptWrap) pwaPromptWrap.style.display = 'none';
+        }
+        deferredPrompt = null;
+    });
+
+    window.addEventListener('appinstalled', () => {
+        showToast('GH Studio adicionado com sucesso à sua tela de início!', 'success');
+        if (pwaPromptWrap) pwaPromptWrap.style.display = 'none';
+    });
+
+    // 3. Connect Mobile Modal & QR Code
+    const btnConnectMobile = document.getElementById('nav-connect-mobile');
+    const btnCloudStatus = document.getElementById('btnCloudStatus');
+    const modalConnectMobile = document.getElementById('modalConnectMobileOverlay');
+    const modalClose = document.getElementById('modalConnectMobileClose');
+    const btnCancel = document.getElementById('btnCancelConnectMobile');
+    const btnCopy = document.getElementById('btnCopyAppUrl');
+    const qrContainer = document.getElementById('qrcodeMobile');
+    const tabIos = document.getElementById('tabInstalIos');
+    const tabAndroid = document.getElementById('tabInstalAndroid');
+    const instIos = document.getElementById('instrucoesIos');
+    const instAndroid = document.getElementById('instrucoesAndroid');
+
+    const appUrl = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1'))
+        ? 'https://gh-studio-gestao.web.app'
+        : window.location.origin;
+
+    const directUrlEl = document.getElementById('mobileDirectUrl');
+    if (directUrlEl) directUrlEl.textContent = appUrl;
+
+    let qrGenerated = false;
+    function renderQrCode() {
+        if (!qrContainer) return;
+        if (qrGenerated && qrContainer.children.length > 0) return;
+        qrContainer.innerHTML = '';
+        if (typeof QRCode !== 'undefined') {
+            try {
+                new QRCode(qrContainer, {
+                    text: appUrl,
+                    width: 170,
+                    height: 170,
+                    colorDark: '#0A0A0B',
+                    colorLight: '#FFFFFF',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+                qrGenerated = true;
+                return;
+            } catch (qrErr) {
+                console.warn('Erro ao instanciar QRCodeJS:', qrErr);
+            }
+        }
+        // Fallback to QR server API image
+        const img = document.createElement('img');
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(appUrl)}`;
+        img.alt = 'QR Code para acesso mobile';
+        img.style.width = '170px';
+        img.style.height = '170px';
+        img.style.display = 'block';
+        img.style.borderRadius = '8px';
+        qrContainer.appendChild(img);
+        qrGenerated = true;
+    }
+
+    const openConnectModal = () => {
+        renderQrCode();
+        openModal(modalConnectMobile);
+    };
+
+    btnConnectMobile?.addEventListener('click', openConnectModal);
+    btnCloudStatus?.addEventListener('click', openConnectModal);
+
+    modalClose?.addEventListener('click', () => closeModal(modalConnectMobile));
+    btnCancel?.addEventListener('click', () => closeModal(modalConnectMobile));
+    modalConnectMobile?.addEventListener('click', (e) => {
+        if (e.target === modalConnectMobile) closeModal(modalConnectMobile);
+    });
+
+    // Copy URL Button
+    btnCopy?.addEventListener('click', async () => {
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(appUrl);
+            } else {
+                throw new Error('Clipboard indisponível');
+            }
+            showToast('Link do aplicativo copiado! Abra no navegador do celular.', 'success');
+        } catch {
+            const temp = document.createElement('input');
+            temp.value = appUrl;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast('Link copiado para a área de transferência!', 'success');
+        }
+    });
+
+    // Instructions Tab Switching
+    tabIos?.addEventListener('click', () => {
+        tabIos.classList.add('active');
+        tabAndroid?.classList.remove('active');
+        if (instIos) instIos.style.display = 'block';
+        if (instAndroid) instAndroid.style.display = 'none';
+    });
+
+    tabAndroid?.addEventListener('click', () => {
+        tabAndroid.classList.add('active');
+        tabIos?.classList.remove('active');
+        if (instAndroid) instAndroid.style.display = 'block';
+        if (instIos) instIos.style.display = 'none';
+    });
+}
 
