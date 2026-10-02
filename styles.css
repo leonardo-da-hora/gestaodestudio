@@ -1077,6 +1077,33 @@ textarea.input-field {
     height: 11px;
 }
 
+.btn-appt-wa {
+    background: rgba(37, 211, 102, 0.15);
+    border: 1px solid rgba(37, 211, 102, 0.35);
+    color: #25D366;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: all var(--transition-fast);
+}
+
+.btn-appt-wa:hover {
+    background: #25D366;
+    color: #FFFFFF;
+    border-color: #25D366;
+    transform: scale(1.15);
+}
+
+.btn-appt-wa svg {
+    width: 11px;
+    height: 11px;
+}
+
 .day-appt .da-name {
     font-weight: 600;
     color: var(--text-primary);

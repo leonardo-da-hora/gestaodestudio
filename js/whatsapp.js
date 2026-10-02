@@ -6,6 +6,22 @@
 const WhatsAppService = {
     // ── Default Message Templates ──
     templates: {
+        lembrete_pre_sessao: (d, cfg) => {
+            const primeiroNome = d.cliente ? d.cliente.split(' ')[0] : 'tudo bem';
+            const estudio = cfg.nomeEstudio || 'GH Studio';
+            const dataFmt = d.data || 'data combinada';
+            const hora = d.horaInicio || 'horário agendado';
+            const projeto = d.servico || d.descricao || 'Sessão de Tatuagem';
+            const endereco = cfg.enderecoEstudio ? `\n📍 *Endereço:* ${cfg.enderecoEstudio}` : '';
+            
+            let financeiro = '';
+            if (d.valorRestante && d.valorRestante !== 'R$ 0,00' && d.valorRestante !== '0') {
+                financeiro = `\n💰 *Saldo restante a acertar na sessão:* ${d.valorRestante}`;
+            }
+
+            return `Olá, *${primeiroNome}*! 🤘 Aqui é do *${estudio}*.\n\nPassando para lembrar que a sua sessão de tattoo está chegando! 📅✨\n\n📌 *DADOS DO AGENDAMENTO:*\n📅 *Data:* ${dataFmt}\n⏰ *Horário:* ${hora}${endereco}\n🎨 *Projeto:* ${projeto}${financeiro}\n\n⚠️ *ORIENTAÇÕES & CUIDADOS PRÉ-SESSÃO (MUITO IMPORTANTE):*\n\n1️⃣ *Alimentação:* Faça uma refeição reforçada antes de vir. *Nunca venha em jejum* para evitar queda de pressão ou tontura.\n2️⃣ *Hidratação:* Beba bastante água desde hoje. Pele bem hidratada absorve melhor a tinta e sangra menos!\n3️⃣ *Descanso:* Tenha uma boa noite de sono na véspera. O cansaço diminui a tolerância à dor.\n4️⃣ *Zero Álcool:* *NÃO* consuma bebidas alcoólicas, drogas ou aspirinas nas 24h antes da sessão (dilatam os vasos e aumentam o sangramento).\n5️⃣ *Roupas Confortáveis:* Venha com roupas leves e que facilitem o acesso à área a ser tatuada (preferência por roupas pretas/escuras).\n6️⃣ *Documento:* Obrigatório trazer documento oficial com foto (RG ou CNH).\n\n👇 Por favor, *responda esta mensagem com um "CONFIRMADO"* para garantirmos a esterilização da bancada e seus materiais reservados!\n\nQualquer dúvida ou imprevisto, avise por aqui. Te esperamos! 🖤🔥`;
+        },
+
         sinal_pendente: (d, cfg) => 
             `Olá, ${d.cliente || 'tudo bem'}! 🖤 Aqui é do ${cfg.nomeEstudio || 'GH Studio'}.\n\nPassando para lembrar do *sinal de ${d.valorSinal || d.valor}* referente ao seu agendamento de *"${d.servico || d.descricao || 'Tatuagem'}"* para o dia *${d.data || 'agendado'}*.\n\nO pagamento do sinal é essencial para garantir o seu horário na nossa agenda. 📅✨\n\n🔑 *Chave PIX:* ${cfg.chavePix || '(favor solicitar chave)'}\n\nAssim que efetuar o pagamento, por gentileza nos envie o comprovante por aqui. Qualquer dúvida estamos à disposição! 🤘`,
 
@@ -204,6 +220,79 @@ const WhatsAppService = {
         });
     },
 
+    // ── 1-Click: Disparo de Lembrete Pré-Sessão & Cuidados ──
+    async sendLembretePreSessao(agendamentoId) {
+        try {
+            const agendamentos = await DataStore.getAgendamentos();
+            const a = agendamentos.find(item => String(item.id) === String(agendamentoId));
+            if (!a) {
+                showToast('Agendamento não encontrado', 'warning');
+                return;
+            }
+
+            let telefone = a.clienteTel || a.telefone || '';
+            const clientes = await DataStore.getClientes().catch(() => []);
+            const cl = clientes.find(c => 
+                (a.clienteId && c.id === a.clienteId) || 
+                (a.cliente && (c.nome || '').trim().toLowerCase() === String(a.cliente).trim().toLowerCase())
+            );
+            if (cl && cl.telefone) {
+                telefone = cl.telefone;
+            }
+
+            const valorTotal = a.valorTotal !== undefined ? a.valorTotal : (a.valor || 0);
+            const valorSinal = a.valorSinal || 0;
+            const restante = Math.max(0, valorTotal - (a.sinalPago === 'sim' ? valorSinal : 0));
+
+            const dados = {
+                cliente: a.cliente,
+                clienteId: a.clienteId,
+                telefone: telefone,
+                servico: a.descricao || 'Sessão de Tatuagem',
+                data: formatDate(a.data),
+                rawDate: a.data,
+                horaInicio: a.horaInicio || 'Conforme agendado',
+                horaFim: a.horaFim || '',
+                valorTotal: formatCurrency(valorTotal),
+                valorSinal: formatCurrency(valorSinal),
+                valorRestante: formatCurrency(restante),
+                sinalPago: a.sinalPago
+            };
+
+            this.openModal({
+                cliente: a.cliente,
+                telefone: telefone,
+                tipo: 'lembrete_pre_sessao',
+                dados: dados
+            });
+        } catch (err) {
+            console.error('Error opening lembrete pre-sessao:', err);
+            showToast('Erro ao carregar agendamento', 'error');
+        }
+    },
+
+    // ── Snippet Insertion into Active Message ──
+    insertSnippet(type) {
+        const txt = document.getElementById('waMensagemTexto');
+        if (!txt) return;
+        const cfg = this._currentConfig || {};
+
+        let snippet = '';
+        if (type === 'cuidados') {
+            snippet = `\n\n⚠️ *ORIENTAÇÕES & CUIDADOS PRÉ-SESSÃO:*\n✅ Alimente-se bem antes de vir (NUNCA venha em jejum)\n✅ Beba bastante água para hidratar a pele\n✅ Tenha uma boa noite de sono na véspera\n✅ Zero álcool ou anticoagulantes nas 24h anteriores\n✅ Roupas confortáveis que facilitem o acesso ao local da tattoo\n✅ Traga documento original com foto (RG/CNH)`;
+        } else if (type === 'pix') {
+            const chave = cfg.chavePix || '(favor solicitar chave)';
+            snippet = `\n\n🔑 *Chave PIX do Estúdio:* ${chave}`;
+        } else if (type === 'endereco') {
+            const end = cfg.enderecoEstudio || 'Nosso estúdio';
+            snippet = `\n\n📍 *Localização do Estúdio:* ${end}`;
+        }
+
+        txt.value = (txt.value + snippet).trim();
+        this.updateCharCount();
+        showToast('Bloco inserido na mensagem!', 'info');
+    },
+
     // ── Render Central WhatsApp Hub ──
     async renderHub() {
         const badge = document.getElementById('whatsappPendingBadge');
@@ -221,9 +310,11 @@ const WhatsAppService = {
             const pixInput = document.getElementById('waConfigPix');
             const nomeInput = document.getElementById('waConfigEstudio');
             const instaInput = document.getElementById('waConfigInstagram');
+            const endInput = document.getElementById('waConfigEndereco');
             if (pixInput && !pixInput.value) pixInput.value = config.chavePix || '';
             if (nomeInput && !nomeInput.value) nomeInput.value = config.nomeEstudio || 'GH Studio';
             if (instaInput && !instaInput.value) instaInput.value = config.instagram || '@ghstudio';
+            if (endInput && !endInput.value) endInput.value = config.enderecoEstudio || '';
 
             // 1. Sinais Pendentes
             // Filter appointments with pending deposit OR signals
@@ -260,7 +351,12 @@ const WhatsAppService = {
             });
 
             // 2. Upcoming Sessions (today onwards)
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayObj = new Date();
+            const todayStr = todayObj.toISOString().split('T')[0];
+            const tmrwObj = new Date(todayObj);
+            tmrwObj.setDate(tmrwObj.getDate() + 1);
+            const tmrwStr = tmrwObj.toISOString().split('T')[0];
+
             const upcomingSessions = agendamentos
                 .filter(a => a.status !== 'cancelado' && a.data >= todayStr)
                 .sort((a, b) => a.data > b.data ? 1 : -1)
@@ -269,7 +365,7 @@ const WhatsAppService = {
                     return {
                         cliente: a.cliente,
                         clienteId: a.clienteId,
-                        telefone: cl?.telefone || '',
+                        telefone: cl?.telefone || a.clienteTel || '',
                         servico: a.descricao || 'Sessão de Tatuagem',
                         data: formatDate(a.data),
                         horaInicio: a.horaInicio || '09:00',
@@ -353,24 +449,41 @@ const WhatsAppService = {
                 if (upcomingSessions.length === 0) {
                     containerSessoes.innerHTML = emptyState('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', 'Nenhuma sessão próxima', 'Não há agendamentos nos próximos dias.');
                 } else {
-                    containerSessoes.innerHTML = upcomingSessions.map(u => `
-                        <div class="wa-action-card">
-                            <div class="wa-card-info">
-                                <div class="wa-card-header">
-                                    <span class="wa-client-name">${u.cliente}</span>
-                                    <span class="status-badge status-concluido">Agendado: ${u.data} às ${u.horaInicio}</span>
+                    containerSessoes.innerHTML = upcomingSessions.map(u => {
+                        let urgencyBadge = '';
+                        if (u.raw.data === todayStr) {
+                            urgencyBadge = `<span class="status-badge" style="background:rgba(239,68,68,0.18); color:#F87171; border:1px solid rgba(239,68,68,0.4); font-weight:800;">🚨 É HOJE</span>`;
+                        } else if (u.raw.data === tmrwStr) {
+                            urgencyBadge = `<span class="status-badge" style="background:rgba(245,197,24,0.18); color:var(--accent); border:1px solid rgba(245,197,24,0.4); font-weight:800;">⏳ É AMANHÃ (Disparar Lembrete)</span>`;
+                        } else {
+                            urgencyBadge = `<span class="status-badge status-concluido">Agendado: ${u.data} às ${u.horaInicio}</span>`;
+                        }
+
+                        return `
+                            <div class="wa-action-card">
+                                <div class="wa-card-info">
+                                    <div class="wa-card-header">
+                                        <span class="wa-client-name">${u.cliente}</span>
+                                        ${urgencyBadge}
+                                    </div>
+                                    <div class="wa-card-meta">
+                                        <span>📅 Data: <strong>${u.data} às ${u.horaInicio}</strong></span>
+                                        <span>🎨 Trabalho: ${u.servico}</span>
+                                        <span>📱 Tel: ${u.telefone || '<em style="color:var(--text-tertiary);">Não cadastrado</em>'}</span>
+                                    </div>
                                 </div>
-                                <div class="wa-card-meta">
-                                    <span>🎨 Trabalho: ${u.servico}</span>
-                                    <span>📱 Tel: ${u.telefone || '<em style="color:var(--text-tertiary);">Não cadastrado</em>'}</span>
+                                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                                    <button type="button" class="btn-whatsapp" onclick="WhatsAppService.sendLembretePreSessao('${u.raw.id}')" title="Disparar Lembrete Pré-Sessão com orientações de hidratação, alimentação e descanso">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                                        <span>Lembrete & Cuidados</span>
+                                    </button>
+                                    <button type="button" class="btn-secondary btn-sm" onclick='WhatsAppService.quickSend("sessao_marcada", ${JSON.stringify(u)})' title="Confirmar agendamento simples">
+                                        Confirmar
+                                    </button>
                                 </div>
                             </div>
-                            <button type="button" class="btn-whatsapp" onclick='WhatsAppService.quickSend("sessao_marcada", ${JSON.stringify(u)})'>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                                <span>Confirmar Sessão</span>
-                            </button>
-                        </div>
-                    `).join('');
+                        `;
+                    }).join('');
                 }
             }
 
@@ -480,10 +593,11 @@ const WhatsAppService = {
         const chavePix = document.getElementById('waConfigPix')?.value.trim() || '';
         const nomeEstudio = document.getElementById('waConfigEstudio')?.value.trim() || 'GH Studio';
         const instagram = document.getElementById('waConfigInstagram')?.value.trim() || '';
+        const enderecoEstudio = document.getElementById('waConfigEndereco')?.value.trim() || '';
 
         try {
-            await DataStore.setWhatsAppConfig({ chavePix, nomeEstudio, instagram });
-            showToast('Configurações do WhatsApp e PIX salvas com sucesso! ⚡', 'success');
+            await DataStore.setWhatsAppConfig({ chavePix, nomeEstudio, instagram, enderecoEstudio });
+            showToast('Configurações salvas com sucesso! ⚡', 'success');
         } catch (err) {
             showToast('Erro ao salvar configurações', 'error');
         }

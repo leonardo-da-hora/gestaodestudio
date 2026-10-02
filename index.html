@@ -759,6 +759,11 @@
                                 <input type="text" id="waConfigInstagram" class="input-field" placeholder="@ghstudio">
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label for="waConfigEndereco">Endereço / Localização do Estúdio</label>
+                            <input type="text" id="waConfigEndereco" class="input-field" placeholder="Ex: Rua Augusta, 1234 - Sala 42, Jardins - São Paulo">
+                            <small style="color:var(--text-tertiary); font-size:0.75rem;">Aparecerá automaticamente nos lembretes de sessão para o cliente não se perder.</small>
+                        </div>
                         <div class="form-actions" style="margin-top: 20px;">
                             <button type="submit" class="btn-primary">Salvar Configurações</button>
                         </div>
@@ -1219,8 +1224,12 @@
                     <input type="hidden" id="agReferenciaUrl" value="">
                 </div>
 
-                <div class="form-actions">
-                    <button type="button" class="btn-danger" id="btnDeleteModalAg" style="display:none; margin-right:auto;">
+                <div class="form-actions" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                    <button type="button" class="btn-whatsapp" id="btnAgSendWhatsApp" style="display:none; align-items:center; gap:6px; margin-right:auto; padding:8px 14px; font-size:0.85rem; font-weight:600;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                        <span>Lembrete Pré-Sessão (WhatsApp)</span>
+                    </button>
+                    <button type="button" class="btn-danger" id="btnDeleteModalAg" style="display:none;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         Excluir Agendamento
                     </button>
@@ -1592,11 +1601,12 @@
                     <div class="form-group" style="flex:1;">
                         <label for="waTipoMensagem">Modelo da Mensagem</label>
                         <select id="waTipoMensagem" class="input-field">
-                            <option value="sinal_pendente">Lembrete de Sinal Pendente</option>
-                            <option value="sessao_marcada">Confirmação de Sessão</option>
-                            <option value="orcamento_followup">Follow-up de Orçamento</option>
-                            <option value="valor_receber">Cobrança de Saldo Restante</option>
-                            <option value="cuidados_pos">Cuidados Pós-Tattoo (Aftercare)</option>
+                            <option value="lembrete_pre_sessao" selected>🚨 Lembrete Pré-Sessão & Cuidados (24h antes)</option>
+                            <option value="sessao_marcada">📅 Confirmação de Agendamento</option>
+                            <option value="sinal_pendente">⏳ Lembrete de Sinal Pendente</option>
+                            <option value="orcamento_followup">💬 Follow-up de Orçamento</option>
+                            <option value="valor_receber">💰 Cobrança de Saldo Restante</option>
+                            <option value="cuidados_pos">🖤 Cuidados Pós-Tattoo (Aftercare)</option>
                         </select>
                     </div>
                 </div>
@@ -1609,8 +1619,11 @@
                     <textarea id="waMensagemTexto" class="input-field" rows="9" style="font-family: inherit; font-size:0.86rem; line-height:1.5; resize:vertical;"></textarea>
                 </div>
 
-                <div class="wa-quick-tags" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
-                    <span style="font-size:0.75rem; color:var(--text-tertiary);">Dica: você pode editar o texto livremente antes de disparar.</span>
+                <div class="wa-quick-tags" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+                    <span style="font-size:0.75rem; color:var(--text-tertiary);">Inserir rápido:</span>
+                    <button type="button" class="chip" onclick="WhatsAppService.insertSnippet('cuidados')" style="cursor:pointer; font-size:0.73rem; padding:3px 8px;" title="Inserir checklist de cuidados prévios">+ Cuidados Pré-Tattoo</button>
+                    <button type="button" class="chip" onclick="WhatsAppService.insertSnippet('pix')" style="cursor:pointer; font-size:0.73rem; padding:3px 8px;" title="Inserir chave PIX">+ Chave PIX</button>
+                    <button type="button" class="chip" onclick="WhatsAppService.insertSnippet('endereco')" style="cursor:pointer; font-size:0.73rem; padding:3px 8px;" title="Inserir endereço do estúdio">+ Endereço</button>
                 </div>
 
                 <div class="form-actions" style="display:flex; gap:10px; justify-content:flex-end;">

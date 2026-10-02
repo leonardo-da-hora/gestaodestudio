@@ -576,7 +576,7 @@ async function renderAppointments() {
                 </div>
                 <span class="appt-status status-${a.status}">${a.status}</span>
                 <div style="display:flex;align-items:center;gap:4px;">
-                    <button class="btn-action" title="Lembrar Sessão via WhatsApp" onclick="WhatsAppService.quickSend('sessao_marcada', { cliente: '${(a.cliente || '').replace(/'/g, "\\'")}', clienteId: '${a.clienteId || ''}', servico: '${(a.descricao || '').replace(/'/g, "\\'")}', data: '${formatDate(a.data)}', horaInicio: '${a.horaInicio || ''}' })">
+                    <button class="btn-action" title="Enviar Lembrete Pré-Sessão & Cuidados (WhatsApp)" onclick="WhatsAppService.sendLembretePreSessao('${a.id}')">
                         <svg viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                     </button>
                     ${actionBtns('agendamento', a.id)}
@@ -677,6 +677,9 @@ async function renderWeekView() {
                                 <div class="da-top-bar">
                                     <div class="da-time">${a.horaInicio} - ${a.horaFim}</div>
                                     <div class="da-actions">
+                                        <button type="button" class="btn-appt-wa" title="Enviar Lembrete Pré-Sessão (WhatsApp)" onclick="event.stopPropagation(); WhatsAppService.sendLembretePreSessao('${a.id}')">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                                        </button>
                                         <button type="button" class="btn-appt-del" title="Excluir agendamento" onclick="event.stopPropagation(); handleDelete('agendamento', '${a.id}')">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                         </button>
@@ -727,7 +730,7 @@ async function renderListView() {
                         ${a.valorSinal ? `<span style="display:block;font-size:0.75rem;color:var(--text-secondary);font-weight:normal;">Sinal: ${formatCurrency(a.valorSinal)} (${a.sinalPago === 'sim' ? 'Pago' : a.sinalPago === 'pendente' ? 'Pendente' : 'Sem sinal'})</span>` : ''}
                     </div>
                     <div style="display:flex;align-items:center;gap:6px;">
-                        <button class="btn-action" title="Enviar Mensagem via WhatsApp" onclick="WhatsAppService.quickSend('${a.sinalPago === 'pendente' ? 'sinal_pendente' : 'sessao_marcada'}', { cliente: '${(a.cliente || '').replace(/'/g, "\\'")}', clienteId: '${a.clienteId || ''}', servico: '${(a.descricao || '').replace(/'/g, "\\'")}', data: '${formatDate(a.data)}', horaInicio: '${a.horaInicio || ''}', valorSinal: '${formatCurrency(a.valorSinal || 0)}' })">
+                        <button class="btn-action" title="Enviar Lembrete Pré-Sessão & Cuidados (WhatsApp)" onclick="WhatsAppService.sendLembretePreSessao('${a.id}')">
                             <svg viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                         </button>
                         ${actionBtns('agendamento', a.id)}
@@ -1040,6 +1043,14 @@ window.handleEdit = async function(type, id) {
                 btnDeleteModalAg.onclick = async () => {
                     closeModal(document.getElementById('modalAgendaOverlay'));
                     await handleDelete('agendamento', id);
+                };
+            }
+            const btnAgSendWhatsApp = document.getElementById('btnAgSendWhatsApp');
+            if (btnAgSendWhatsApp) {
+                btnAgSendWhatsApp.style.display = 'inline-flex';
+                btnAgSendWhatsApp.onclick = () => {
+                    closeModal(document.getElementById('modalAgendaOverlay'));
+                    WhatsAppService.sendLembretePreSessao(id);
                 };
             }
             openModal(document.getElementById('modalAgendaOverlay'));
@@ -2331,6 +2342,8 @@ document.getElementById('btnNovoAgendamento')?.addEventListener('click', async (
     if (badge) badge.style.display = 'none';
     const btnDel = document.getElementById('btnDeleteModalAg');
     if (btnDel) btnDel.style.display = 'none';
+    const btnWa = document.getElementById('btnAgSendWhatsApp');
+    if (btnWa) btnWa.style.display = 'none';
     const title = document.getElementById('modalAgendaTitle');
     if (title) title.textContent = 'Novo Agendamento';
     
