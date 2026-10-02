@@ -59,6 +59,56 @@ const Auth = {
         }
     },
 
+    // ── Login with Google (1-Click) ──
+    async loginWithGoogle() {
+        if (IS_DEMO_MODE) {
+            const user = {
+                uid: 'google_user_' + Date.now(),
+                email: 'leonardo.demo@gmail.com',
+                displayName: 'Leonardo (Google)',
+                photoURL: null
+            };
+            localStorage.setItem('gh_demo_user', JSON.stringify(user));
+            this.currentUser = user;
+            return { success: true, user };
+        }
+
+        try {
+            if (typeof firebase === 'undefined' || !firebase.auth) {
+                throw new Error('Firebase Auth não carregado');
+            }
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.addScope('profile');
+            provider.addScope('email');
+            provider.setCustomParameters({ prompt: 'select_account' });
+
+            const result = await auth.signInWithPopup(provider);
+            const user = result.user;
+            this.currentUser = {
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName || user.email.split('@')[0],
+                photoURL: user.photoURL
+            };
+            return { success: true, user: this.currentUser };
+        } catch (error) {
+            console.error('Google Auth error:', error);
+            if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                return { success: false, error: 'O login com Google foi cancelado.' };
+            }
+            if (error.code === 'auth/popup-blocked') {
+                try {
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    await auth.signInWithRedirect(provider);
+                    return { success: true, redirecting: true };
+                } catch (rErr) {
+                    return { success: false, error: 'O navegador bloqueou a janela do Google. Habilite pop-ups para fazer login.' };
+                }
+            }
+            return { success: false, error: this._getErrorMessage(error.code) };
+        }
+    },
+
     // ── Register New User ──
     async register(name, email, password) {
         if (IS_DEMO_MODE) {
@@ -148,7 +198,11 @@ const Auth = {
             'auth/invalid-email': 'Email inválido. Verifique o formato.',
             'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos.',
             'auth/network-request-failed': 'Erro de conexão. Verifique sua internet.',
-            'auth/invalid-credential': 'Credenciais inválidas. Verifique email e senha.'
+            'auth/invalid-credential': 'Credenciais inválidas. Verifique email e senha.',
+            'auth/popup-blocked': 'O navegador bloqueou o popup do Google. Habilite pop-ups para este site.',
+            'auth/popup-closed-by-user': 'O login com Google foi cancelado antes de ser concluído.',
+            'auth/account-exists-with-different-credential': 'Já existe uma conta com este mesmo email usando outro método.',
+            'auth/operation-not-allowed': 'O login com Google ainda não foi ativado no Console do Firebase.'
         };
         return messages[code] || 'Ocorreu um erro. Tente novamente.';
     }

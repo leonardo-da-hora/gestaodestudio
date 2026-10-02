@@ -97,6 +97,20 @@
                     </button>
                 </form>
 
+                <div class="auth-divider">
+                    <span>ou acesse com</span>
+                </div>
+
+                <button type="button" class="btn-google" id="btnGoogleLogin">
+                    <svg viewBox="0 0 24 24" class="google-icon">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.93 6.72-4.93z"/>
+                    </svg>
+                    <span>Entrar com Google</span>
+                </button>
+
                 <div class="form-footer">
                     <span>Não tem uma conta?</span>
                     <button type="button" class="link-btn" id="showRegister">Criar conta</button>
@@ -147,6 +161,20 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                     </button>
                 </form>
+
+                <div class="auth-divider">
+                    <span>ou cadastre-se com</span>
+                </div>
+
+                <button type="button" class="btn-google" id="btnGoogleRegister">
+                    <svg viewBox="0 0 24 24" class="google-icon">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.93 6.72-4.93z"/>
+                    </svg>
+                    <span>Cadastrar com Google</span>
+                </button>
 
                 <div class="form-footer">
                     <span>Já tem uma conta?</span>
@@ -305,6 +333,33 @@
                 btn.classList.remove('loading');
                 btn.disabled = false;
             });
+
+            // ── Google Sign-In (1-Click) ──
+            const handleGoogleAuth = async (errorElId, btnElId) => {
+                const errorEl = document.getElementById(errorElId);
+                const btn = document.getElementById(btnElId);
+                if (errorEl) errorEl.textContent = '';
+                if (btn) {
+                    btn.classList.add('loading');
+                    btn.disabled = true;
+                }
+
+                const result = await Auth.loginWithGoogle();
+                if (result.success) {
+                    if (!result.redirecting) {
+                        window.location.href = 'index.html';
+                    }
+                } else {
+                    if (errorEl) errorEl.textContent = result.error;
+                    if (btn) {
+                        btn.classList.remove('loading');
+                        btn.disabled = false;
+                    }
+                }
+            };
+
+            document.getElementById('btnGoogleLogin')?.addEventListener('click', () => handleGoogleAuth('loginError', 'btnGoogleLogin'));
+            document.getElementById('btnGoogleRegister')?.addEventListener('click', () => handleGoogleAuth('registerError', 'btnGoogleRegister'));
         });
     </script>
 </body>
