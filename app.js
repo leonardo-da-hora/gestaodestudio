@@ -1843,12 +1843,16 @@ const mobilePageTitles = {
 let currentPage = 'dashboard';
 
 const navigateTo = (page) => {
+    if (!page || typeof page !== 'string') return;
+    const targetPage = document.getElementById(`page-${page}`);
+    if (!targetPage) return;
+
     currentPage = page;
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(`page-${page}`)?.classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    targetPage.classList.add('active');
+    document.querySelectorAll('.nav-item[data-page]').forEach(n => n.classList.remove('active'));
     document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
-    document.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.bottom-tab[data-page]').forEach(t => t.classList.remove('active'));
     document.querySelector(`.bottom-tab[data-page="${page}"]`)?.classList.add('active');
     
     const isMobile = window.innerWidth <= 768;
@@ -1872,9 +1876,9 @@ window.addEventListener('resize', () => {
     if (pageTitleEl) pageTitleEl.textContent = title;
 });
 
-// Sidebar nav
-document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => navigateTo(btn.dataset.page)));
-document.querySelectorAll('.bottom-tab').forEach(btn => btn.addEventListener('click', () => navigateTo(btn.dataset.page)));
+// Sidebar nav - Apenas botões com data-page navegam entre páginas
+document.querySelectorAll('.nav-item[data-page]').forEach(btn => btn.addEventListener('click', () => navigateTo(btn.dataset.page)));
+document.querySelectorAll('.bottom-tab[data-page]').forEach(btn => btn.addEventListener('click', () => navigateTo(btn.dataset.page)));
 document.getElementById('btnVerAgenda')?.addEventListener('click', () => navigateTo('agenda'));
 document.getElementById('btnVerFinanceiro')?.addEventListener('click', () => navigateTo('financeiro'));
 
@@ -3941,10 +3945,15 @@ function setupPwaAndMobileConnect() {
             if (instAndroid) instAndroid.style.display = 'none';
         }
 
+        if (typeof closeSidebar === 'function') closeSidebar();
         openModal(modalConnectMobile);
     };
 
-    btnConnectMobile?.addEventListener('click', openConnectModal);
+    btnConnectMobile?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openConnectModal();
+    });
     btnCloudStatus?.addEventListener('click', openConnectModal);
 
     modalClose?.addEventListener('click', () => closeModal(modalConnectMobile));
@@ -4177,13 +4186,8 @@ function setupPerfilListeners() {
     [btnOpenPerfilSidebar, userInfoClickable, navConfigPerfil].forEach(el => {
         el?.addEventListener('click', (e) => {
             e.preventDefault();
-            // Se mobile e sidebar aberta, fecha sidebar
-            const sidebar = document.getElementById('sidebar');
-            const sidebarOverlay = document.getElementById('sidebarOverlay');
-            if (sidebar && sidebar.classList.contains('open')) {
-                sidebar.classList.remove('open');
-                sidebarOverlay?.classList.remove('active');
-            }
+            e.stopPropagation();
+            if (typeof closeSidebar === 'function') closeSidebar();
             openPerfilModal();
         });
     });
