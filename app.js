@@ -1874,7 +1874,15 @@ const closeSidebar = () => {
     if (sidebarOverlay) sidebarOverlay.classList.remove('active');
 };
 
-menuToggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeSidebar() : openSidebar());
+menuToggle?.addEventListener('click', () => sidebar.classList.contains('open') ? closeSidebar() : openSidebar());
+document.getElementById('sidebarCloseBtn')?.addEventListener('click', closeSidebar);
+
+// Close on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar?.classList.contains('open')) {
+        closeSidebar();
+    }
+});
 
 
 // =========================================================

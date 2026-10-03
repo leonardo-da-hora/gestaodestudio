@@ -19,7 +19,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <!-- QRCode.js for mobile connection -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link rel="stylesheet" href="styles.css?v=3.4">
+    <link rel="stylesheet" href="styles.css?v=3.5">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0A0A0B">
     <meta name="mobile-web-app-capable" content="yes">
@@ -37,6 +37,7 @@
                 <img src="assets/logo.jpg" alt="GH Studio" class="logo-img">
                 <span class="logo-text">Studio</span>
             </div>
+            <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Fechar menu lateral" title="Fechar menu">✕</button>
         </div>
         <nav class="sidebar-nav">
             <button class="nav-item active" data-page="dashboard" id="nav-dashboard">
@@ -430,18 +431,20 @@
 
             <!-- Filters -->
             <div class="fin-filters">
-                <div class="filter-group">
+                <div class="filter-group filter-group-periodo">
                     <label>Período:</label>
-                    <input type="date" id="filterDateFrom" class="input-field" title="Data inicial">
-                    <span>até</span>
-                    <input type="date" id="filterDateTo" class="input-field" title="Data final">
+                    <div class="filter-dates-row">
+                        <input type="date" id="filterDateFrom" class="input-field" title="Data inicial">
+                        <span class="filter-date-sep">até</span>
+                        <input type="date" id="filterDateTo" class="input-field" title="Data final">
+                    </div>
                 </div>
                 <div class="fin-filter-chips" id="finPeriodChips">
                     <button type="button" class="chip" data-period="mes">Este Mês</button>
                     <button type="button" class="chip" data-period="30d">Últimos 30d</button>
                     <button type="button" class="chip" data-period="ano">Este Ano</button>
                 </div>
-                <div class="filter-group">
+                <div class="filter-group filter-group-pagamento">
                     <label>Pagamento:</label>
                     <select id="filterPayment" class="input-field">
                         <option value="todos">Todos os Métodos</option>
@@ -451,24 +454,26 @@
                         <option value="dinheiro">Dinheiro</option>
                     </select>
                 </div>
-                <button class="btn-primary" id="btnFiltrar" style="padding: 9px 16px; font-size: 0.85rem;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                    Filtrar
-                </button>
-                <button type="button" class="btn-secondary" id="btnClearFilter" style="padding: 9px 14px; font-size: 0.85rem;" title="Limpar todos os filtros">Limpar</button>
+                <div class="fin-filter-actions">
+                    <button class="btn-primary" id="btnFiltrar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                        <span>Filtrar</span>
+                    </button>
+                    <button type="button" class="btn-secondary" id="btnClearFilter" title="Limpar todos os filtros">Limpar</button>
+                </div>
             </div>
 
             <!-- Tab: Transações -->
             <div class="fin-panel active" id="panel-transacoes">
                 <div class="glass-card">
-                    <div class="section-header">
+                    <div class="section-header fin-section-header">
                         <h2>Todas as Transações</h2>
-                        <div class="fin-header-actions" style="display:flex; align-items:center; gap:10px;">
+                        <div class="fin-header-actions">
                             <button class="btn-export" id="btnExportPDF">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                                 <span>Exportar PDF</span>
                             </button>
-                            <button type="button" class="btn-secondary" id="btnOpenFechamentoFin" style="padding:9px 14px; font-size:0.85rem;" title="Abrir Fechamento do Mês & DRE">
+                            <button type="button" class="btn-secondary" id="btnOpenFechamentoFin" title="Abrir Fechamento do Mês & DRE">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:6px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                                 <span>Fechamento DRE</span>
                             </button>
@@ -921,66 +926,6 @@
             </div>
         </section>
     </main>
-
-    <!-- ===== BOTTOM TAB BAR (Mobile) ===== -->
-    <nav class="bottom-tabs" id="bottomTabs">
-        <button class="bottom-tab active" data-page="dashboard">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="3" width="7" height="7" rx="1"/>
-                <rect x="3" y="14" width="7" height="7" rx="1"/>
-                <rect x="14" y="14" width="7" height="7" rx="1"/>
-            </svg>
-            <span>Dashboard</span>
-        </button>
-        <button class="bottom-tab" data-page="agenda">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <span>Agenda</span>
-        </button>
-        <button class="bottom-tab" data-page="financeiro">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="1" x2="12" y2="23"/>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-            </svg>
-            <span>Financeiro</span>
-        </button>
-        <button class="bottom-tab" data-page="clientes">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            <span>Clientes</span>
-        </button>
-        <button class="bottom-tab" data-page="galeria">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <circle cx="8.5" cy="8.5" r="1.5"/>
-                <polyline points="21 15 16 10 5 21"/>
-            </svg>
-            <span>Galeria</span>
-        </button>
-        <button class="bottom-tab" data-page="estoque">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                <line x1="12" y1="22.08" x2="12" y2="12"/>
-            </svg>
-            <span>Estoque</span>
-        </button>
-        <button class="bottom-tab" data-page="whatsapp">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-            </svg>
-            <span>WhatsApp</span>
-        </button>
-    </nav>
 
     <!-- ===== MODAL: Nova Transação ===== -->
     <div class="modal-overlay" id="modalOverlay">
@@ -2379,6 +2324,6 @@
     <script src="js/notifications.js?v=2.5"></script>
     <script src="js/whatsapp.js?v=2.5"></script>
     <script src="js/calculator.js?v=2.8"></script>
-    <script src="app.js?v=3.3"></script>
+    <script src="app.js?v=3.5"></script>
 </body>
 </html>
