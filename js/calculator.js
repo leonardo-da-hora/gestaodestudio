@@ -331,14 +331,21 @@ const TattooCalculator = {
         this.updateCalculation();
 
         overlay.classList.add('active');
-        if (typeof document !== 'undefined' && document.body) document.body.style.overflow = 'hidden';
+        if (typeof document !== 'undefined' && document.body) {
+            document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+        }
     },
 
     closeModal() {
         const overlay = document.getElementById('modalCalculadoraOverlay');
         if (overlay) {
             overlay.classList.remove('active');
-            if (typeof document !== 'undefined' && document.body) document.body.style.overflow = '';
+            const activeOverlays = document.querySelectorAll('.modal-overlay.active, .lightbox-overlay.active');
+            if (activeOverlays.length === 0 && typeof document !== 'undefined' && document.body) {
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+            }
         }
     },
 
@@ -532,10 +539,57 @@ const TattooCalculator = {
         });
 
         // Botão "📅 Agendar com este Orçamento"
-        document.getElementById('btnAgendarComOrcamento')?.addEventListener('click', () => {
-            if (!this.lastCalculation) return;
-            const calc = this.lastCalculation;
-            
+        document.getElementById('btnAgendarComOrcamento')?.addEventListener('click', async () => {
+            // Garantir cálculos atualizados
+            await this.updateCalculation();
+            const calc = this.lastCalculation || this.calculate({
+                largura: parseFloat(document.getElementById('calcLargura')?.value) || 10,
+                altura: parseFloat(document.getElementById('calcAltura')?.value) || 10,
+                estilo: document.getElementById('calcEstilo')?.value || 'blackwork',
+                local: document.getElementById('calcLocal')?.value || 'braco',
+                complexidade: document.getElementById('calcComplexidade')?.value || 'media',
+                valorHora: parseFloat(document.getElementById('calcValorHora')?.value) || this.config.valorHoraBase,
+                insumoExtra: parseFloat(document.getElementById('calcInsumoExtra')?.value) || 0,
+                percentualSinal: parseFloat(document.getElementById('calcPercentualSinal')?.value) || 30
+            });
+
+            // Obter dados do cliente do formulário da calculadora
+            const inputNome = document.getElementById('calcClienteNome');
+            const selCliente = document.getElementById('calcClienteSelect');
+            let clienteNome = (inputNome?.value || '').trim();
+            let clienteTel = (document.getElementById('calcClienteTel')?.value || '').trim();
+            let clienteId = document.getElementById('calcClienteId')?.value || (selCliente ? selCliente.value : '') || '';
+
+            if (!clienteNome && selCliente && selCliente.value) {
+                const opt = selCliente.selectedOptions[0];
+                if (opt) {
+                    clienteNome = opt.getAttribute('data-nome') || opt.textContent.split(' (')[0].trim();
+                    if (!clienteTel) clienteTel = opt.getAttribute('data-tel') || '';
+                }
+            }
+
+            // Tentar localizar cliente cadastrado no DataStore por ID ou Nome
+            let allClientes = [];
+            try {
+                if (typeof window !== 'undefined' && window.DataStore && typeof DataStore.getClientes === 'function') {
+                    allClientes = await DataStore.getClientes();
+                }
+            } catch (err) {}
+
+            let matchedClient = null;
+            if (clienteId) {
+                matchedClient = allClientes.find(c => c.id === clienteId);
+            }
+            if (!matchedClient && clienteNome) {
+                const lowerNome = clienteNome.toLowerCase();
+                matchedClient = allClientes.find(c => c.nome && c.nome.toLowerCase() === lowerNome);
+                if (matchedClient) {
+                    clienteId = matchedClient.id;
+                    clienteNome = matchedClient.nome;
+                    if (!clienteTel) clienteTel = matchedClient.telefone || '';
+                }
+            }
+
             // Fechar modal da calculadora
             this.closeModal();
 
@@ -548,41 +602,87 @@ const TattooCalculator = {
                 const title = document.getElementById('modalAgendaTitle');
                 if (title) title.textContent = 'Agendar com Orçamento Calculado';
 
-                // Preencher campos
-                if (calc.clienteNome) {
-                    document.getElementById('agCliente').value = calc.clienteNome;
-                    document.getElementById('agClienteId').value = calc.clienteId || '';
-                    
-                    const select = document.getElementById('agClienteSelect');
-                    if (select) {
-                        if (calc.clienteId) select.value = calc.clienteId;
-                        else select.value = '+novo';
-                        if (select.value === '+novo' && document.getElementById('newAgClienteNome')) {
-                            document.getElementById('newAgClienteFields').style.display = 'block';
-                            document.getElementById('newAgClienteNome').value = calc.clienteNome;
-                            if (calc.clienteTel && document.getElementById('newAgClienteTel')) {
-                                document.getElementById('newAgClienteTel').value = calc.clienteTel;
-                            }
-                        }
-                    }
+                // Garantir que a lista de clientes do agendamento está populada no DOM!
+                if (typeof window.populateAgClients === 'function') {
+                    await window.populateAgClients(clienteId || (matchedClient ? matchedClient.id : null));
                 }
 
-                document.getElementById('agDescricao').value = calc.projetoDesc 
-                    ? `${calc.projetoDesc} (${calc.largura}x${calc.altura}cm - ${calc.local})`
-                    : `Tatuagem ${calc.largura}x${calc.altura}cm (${calc.local})`;
+                const agSelect = document.getElementById('agClienteSelect');
+                const newFields = document.getElementById('newAgClienteFields');
+                const badge = document.getElementById('agClienteBadge');
+
+                if (matchedClient || clienteId) {
+                    if (agSelect) {
+                        agSelect.value = clienteId;
+                        if (typeof handleAgClienteSelectChange === 'function') {
+                            handleAgClienteSelectChange();
+                        }
+                    }
+                    if (newFields) newFields.style.display = 'none';
+                    document.getElementById('agCliente').value = clienteNome;
+                    document.getElementById('agClienteId').value = clienteId;
+                } else if (clienteNome) {
+                    // Cliente avulso / novo
+                    if (agSelect) {
+                        agSelect.value = '+novo';
+                        if (typeof handleAgClienteSelectChange === 'function') {
+                            handleAgClienteSelectChange();
+                        }
+                    }
+                    if (newFields) newFields.style.display = 'block';
+                    if (badge) badge.style.display = 'none';
+                    const newNomeEl = document.getElementById('newAgClienteNome');
+                    const newTelEl = document.getElementById('newAgClienteTel');
+                    if (newNomeEl) newNomeEl.value = clienteNome;
+                    if (newTelEl && clienteTel) newTelEl.value = clienteTel;
+                    document.getElementById('agCliente').value = clienteNome;
+                    document.getElementById('agClienteId').value = '';
+                } else {
+                    if (agSelect) {
+                        agSelect.value = '';
+                        if (typeof handleAgClienteSelectChange === 'function') {
+                            handleAgClienteSelectChange();
+                        }
+                    }
+                    if (newFields) newFields.style.display = 'none';
+                }
+
+                const projetoDesc = (document.getElementById('calcDescricao')?.value || '').trim();
+                const estilo = document.getElementById('calcEstilo')?.value || 'blackwork';
+                const local = document.getElementById('calcLocal')?.value || 'braco';
+                const largura = parseFloat(document.getElementById('calcLargura')?.value) || 10;
+                const altura = parseFloat(document.getElementById('calcAltura')?.value) || 10;
+                const localNome = this.locais[local]?.nome?.split(' (')[0] || local;
+
+                document.getElementById('agDescricao').value = projetoDesc 
+                    ? `${projetoDesc} (${largura}x${altura}cm - ${localNome})`
+                    : `Tatuagem ${largura}x${altura}cm (${localNome})`;
 
                 document.getElementById('agValorTotal').value = calc.precoRecomendado;
                 document.getElementById('agValorSinal').value = calc.valorSinal;
                 document.getElementById('agSinalPago').value = 'pendente';
                 document.getElementById('agStatus').value = 'agendado';
+
+                const agDataEl = document.getElementById('agData');
+                if (agDataEl && !agDataEl.value) {
+                    agDataEl.value = typeof TODAY !== 'undefined' ? TODAY : new Date().toISOString().split('T')[0];
+                }
+                const agInicioEl = document.getElementById('agInicio');
+                if (agInicioEl && !agInicioEl.value) agInicioEl.value = '14:00';
+                const agFimEl = document.getElementById('agFim');
+                if (agFimEl && !agFimEl.value) agFimEl.value = '17:00';
                 
                 if (window.calcAgRestante) window.calcAgRestante();
                 if (window.openModal) window.openModal(modalAgendaOverlay);
                 else {
                     modalAgendaOverlay.classList.add('active');
+                    document.body.classList.add('modal-open');
                     document.body.style.overflow = 'hidden';
                 }
-                if (window.showToast) showToast('Valores e projeto carregados no agendamento!', 'info');
+                if (window.showToast) {
+                    const clientMsg = clienteNome ? ` do cliente "${clienteNome}"` : '';
+                    showToast(`Orçamento${clientMsg} carregado no agendamento!`, 'info');
+                }
             }
         });
 

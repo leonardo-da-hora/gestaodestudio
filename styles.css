@@ -1721,13 +1721,22 @@ textarea.input-field {
 /* =========================================================
    MODAL
    ========================================================= */
+body.modal-open {
+    overflow: hidden !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    touch-action: none !important;
+    overscroll-behavior: none !important;
+}
+
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.65);
+    height: 100dvh;
+    background: rgba(0, 0, 0, 0.72);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     z-index: 200;
@@ -1737,6 +1746,11 @@ textarea.input-field {
     opacity: 0;
     visibility: hidden;
     transition: all var(--transition-normal);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 16px;
+    box-sizing: border-box;
 }
 
 .modal-overlay.active {
@@ -1748,7 +1762,8 @@ textarea.input-field {
 .modal-card {
     width: 92%;
     max-width: 540px;
-    max-height: 90vh;
+    max-height: calc(100dvh - 32px);
+    max-height: calc(100vh - 32px);
     background: var(--bg-card);
     border: 1px solid var(--border-primary);
     border-radius: var(--radius-lg);
@@ -1758,6 +1773,10 @@ textarea.input-field {
     box-sizing: border-box;
     transform: translateY(20px) scale(0.97);
     transition: transform var(--transition-slow);
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
 }
 
 .modal-overlay.active .modal,
@@ -1810,6 +1829,7 @@ textarea.input-field {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    padding-bottom: 8px;
 }
 
 .form-row {
@@ -1836,6 +1856,7 @@ textarea.input-field {
     justify-content: flex-end;
     gap: 12px;
     margin-top: 8px;
+    padding-bottom: 6px;
 }
 
 .valor-restante {
@@ -2459,12 +2480,27 @@ textarea.input-field {
     }
 
     /* Modals Mobile */
-    .modal {
-        width: 95% !important;
-        max-width: 95% !important;
-        max-height: 88vh !important;
-        padding: 16px !important;
+    .modal-overlay {
+        padding: 10px 8px !important;
+        align-items: flex-start !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+    }
+
+    .modal,
+    .modal-card {
+        width: 96% !important;
+        max-width: 500px !important;
+        max-height: calc(100dvh - 16px) !important;
+        max-height: calc(100vh - 16px) !important;
+        margin: auto 0 !important;
+        padding: 18px 14px 28px 14px !important;
         border-radius: var(--radius-md) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        touch-action: pan-y !important;
     }
 
     .modal-header {
@@ -2746,17 +2782,26 @@ textarea.input-field {
 
     /* Modal Mobile */
     .modal-overlay {
-        padding: 10px !important;
+        padding: 8px !important;
         align-items: flex-start !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
     }
 
+    .modal,
     .modal-card {
-        padding: 14px 12px !important;
-        max-height: calc(100dvh - 20px) !important;
+        padding: 16px 12px 28px 12px !important;
+        max-height: calc(100dvh - 16px) !important;
+        max-height: calc(100vh - 16px) !important;
         border-radius: var(--radius-md) !important;
         margin: auto 0 !important;
         width: 100% !important;
         max-width: 100% !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        touch-action: pan-y !important;
     }
 
     .despesas-summary {
@@ -5540,19 +5585,36 @@ tr:hover .row-actions,
 /* Presets bar */
 .calc-presets-bar {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    gap: 8px;
     padding: 10px 14px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.025);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    margin: 14px 0 18px 0;
-    overflow-x: auto;
+    margin: 10px 0 16px 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.calc-presets-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
 }
 
 .calc-presets-label {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.calc-presets-hint {
+    font-size: 0.68rem;
     color: var(--text-tertiary);
     white-space: nowrap;
 }
@@ -5561,15 +5623,37 @@ tr:hover .row-actions,
     display: flex;
     gap: 8px;
     flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(245, 197, 24, 0.3) transparent;
+}
+
+.calc-presets-list::-webkit-scrollbar {
+    height: 4px;
+}
+
+.calc-presets-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+}
+
+.calc-presets-list::-webkit-scrollbar-thumb {
+    background: rgba(245, 197, 24, 0.35);
+    border-radius: 4px;
 }
 
 .calc-preset-chip {
+    flex-shrink: 0;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: var(--text-primary, #F0F0F0);
     font-size: 0.78rem;
     font-weight: 600;
-    padding: 6px 14px;
+    padding: 7px 14px;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;

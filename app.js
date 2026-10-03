@@ -1641,6 +1641,7 @@ window.openLightbox = function(imgUrl, title = '', meta = '', desc = '', tag = '
     }
 
     overlay.classList.add('active');
+    document.body.classList.add('modal-open');
     document.body.style.overflow = 'hidden';
 };
 
@@ -1648,7 +1649,11 @@ window.closeLightbox = function() {
     const overlay = document.getElementById('modalLightboxOverlay');
     if (overlay) {
         overlay.classList.remove('active');
-        document.body.style.overflow = '';
+        const activeOverlays = document.querySelectorAll('.modal-overlay.active, .lightbox-overlay.active');
+        if (activeOverlays.length === 0) {
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+        }
     }
 };
 
@@ -2073,12 +2078,17 @@ const modalAgendaOverlay = document.getElementById('modalAgendaOverlay');
 window.openModal = (overlay) => { 
     if (!overlay) return;
     overlay.classList.add('active'); 
+    document.body.classList.add('modal-open');
     document.body.style.overflow = 'hidden'; 
 };
 window.closeModal = (overlay) => { 
     if (!overlay) return;
     overlay.classList.remove('active'); 
-    document.body.style.overflow = ''; 
+    const activeOverlays = document.querySelectorAll('.modal-overlay.active, .lightbox-overlay.active');
+    if (activeOverlays.length === 0) {
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = ''; 
+    }
     if (typeof resetEditing === 'function') resetEditing(); 
 };
 const openModal = window.openModal;
@@ -2301,6 +2311,7 @@ function handleAgClienteSelectChange() {
         if (hiddenId) hiddenId.value = '';
     }
 }
+window.handleAgClienteSelectChange = handleAgClienteSelectChange;
 document.getElementById('agClienteSelect')?.addEventListener('change', handleAgClienteSelectChange);
 
 window.calcAgRestante = function() {

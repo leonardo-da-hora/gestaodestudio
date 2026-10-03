@@ -78,6 +78,7 @@ const WhatsAppService = {
 
         // Show modal
         modal.classList.add('active');
+        document.body.classList.add('modal-open');
         document.body.style.overflow = 'hidden';
     },
 
@@ -151,7 +152,11 @@ const WhatsAppService = {
         const modal = document.getElementById('modalWhatsAppOverlay');
         if (modal) {
             modal.classList.remove('active');
-            document.body.style.overflow = '';
+            const activeOverlays = document.querySelectorAll('.modal-overlay.active, .lightbox-overlay.active');
+            if (activeOverlays.length === 0) {
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+            }
         }
     },
 
@@ -608,6 +613,7 @@ const WhatsAppService = {
         const modal = document.getElementById('modalNovoOrcamentoOverlay');
         if (modal) {
             modal.classList.add('active');
+            document.body.classList.add('modal-open');
             document.body.style.overflow = 'hidden';
             this.populateOrcamentoClients();
         }
@@ -617,7 +623,11 @@ const WhatsAppService = {
         const modal = document.getElementById('modalNovoOrcamentoOverlay');
         if (modal) {
             modal.classList.remove('active');
-            document.body.style.overflow = '';
+            const activeOverlays = document.querySelectorAll('.modal-overlay.active, .lightbox-overlay.active');
+            if (activeOverlays.length === 0) {
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+            }
         }
     },
 
