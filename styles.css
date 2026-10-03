@@ -2042,7 +2042,7 @@ body.modal-open {
 
     /* Top Bar Mobile */
     .top-bar {
-        padding: 12px 16px;
+        padding: 10px 12px;
         gap: 8px;
         position: sticky;
         top: 0;
@@ -2053,10 +2053,12 @@ body.modal-open {
     .top-bar-title {
         min-width: 0;
         flex: 1;
+        overflow: hidden;
     }
 
     .top-bar-title h1 {
         font-size: 1.15rem;
+        font-weight: 800;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -2077,24 +2079,18 @@ body.modal-open {
     }
 
     .top-bar-actions .btn-primary span,
+    .btn-topbar-calc span,
     #cloudStatusLabel {
         display: none !important;
     }
 
     .btn-topbar-calc {
-        padding: 6px 10px;
-        gap: 5px;
+        padding: 7px 9px;
         border-radius: var(--radius-sm);
         display: inline-flex !important;
         align-items: center;
+        justify-content: center;
         flex-shrink: 0;
-    }
-
-    .btn-topbar-calc span {
-        display: inline-block !important;
-        font-size: 0.72rem;
-        font-weight: 700;
-        white-space: nowrap;
     }
 
     .btn-cloud-status {

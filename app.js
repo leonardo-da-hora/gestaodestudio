@@ -1830,14 +1830,31 @@ const pageTitles = {
     estoque: 'Controle de Estoque & Materiais'
 };
 
+const mobilePageTitles = {
+    dashboard: 'Dashboard',
+    agenda: 'Agenda',
+    financeiro: 'Financeiro',
+    clientes: 'Clientes',
+    galeria: 'Galeria',
+    whatsapp: 'WhatsApp',
+    estoque: 'Estoque'
+};
+
+let currentPage = 'dashboard';
+
 const navigateTo = (page) => {
+    currentPage = page;
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(`page-${page}`)?.classList.add('active');
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
     document.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`.bottom-tab[data-page="${page}"]`)?.classList.add('active');
-    document.getElementById('pageTitle').textContent = pageTitles[page] || 'GH Studio';
+    
+    const isMobile = window.innerWidth <= 768;
+    const title = isMobile ? (mobilePageTitles[page] || pageTitles[page] || 'GH Studio') : (pageTitles[page] || 'GH Studio');
+    const pageTitleEl = document.getElementById('pageTitle');
+    if (pageTitleEl) pageTitleEl.textContent = title;
     if (page === 'galeria') renderGaleria();
     if (page === 'agenda') { renderWeekView(); renderListView(); }
     if (page === 'whatsapp' && window.WhatsAppService) WhatsAppService.renderHub();
@@ -1847,6 +1864,13 @@ const navigateTo = (page) => {
 };
 
 window.navigateToPage = navigateTo;
+
+window.addEventListener('resize', () => {
+    const isMobile = window.innerWidth <= 768;
+    const title = isMobile ? (mobilePageTitles[currentPage] || pageTitles[currentPage] || 'GH Studio') : (pageTitles[currentPage] || 'GH Studio');
+    const pageTitleEl = document.getElementById('pageTitle');
+    if (pageTitleEl) pageTitleEl.textContent = title;
+});
 
 // Sidebar nav
 document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => navigateTo(btn.dataset.page)));
