@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gh-studio-v3.8';
+const CACHE_NAME = 'gh-studio-v3.9';
 const STATIC_ASSETS = [
     '/',
     '/index.html',

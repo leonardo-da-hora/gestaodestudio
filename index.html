@@ -19,7 +19,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <!-- QRCode.js for mobile connection -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link rel="stylesheet" href="styles.css?v=3.8">
+    <link rel="stylesheet" href="styles.css?v=3.9">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0A0A0B">
     <meta name="mobile-web-app-capable" content="yes">
@@ -155,7 +155,7 @@
             </div>
             <div class="top-bar-actions">
                 <button class="btn-topbar-calc" id="btnAbrirCalculadora" title="Calculadora Inteligente de Orçamento de Tattoo" onclick="if(window.TattooCalculator) TattooCalculator.openModal()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;">
                         <rect x="4" y="2" width="16" height="20" rx="2"/>
                         <line x1="8" y1="6" x2="16" y2="6"/>
                         <line x1="16" y1="14" x2="16" y2="18"/>
@@ -163,7 +163,7 @@
                         <path d="M12 14h.01"/><path d="M8 14h.01"/>
                         <path d="M12 18h.01"/><path d="M8 18h.01"/>
                     </svg>
-                    <span>Orçar Tattoo</span>
+                    <span>Novo Orçamento</span>
                 </button>
                 <button class="btn-cloud-status" id="btnCloudStatus" title="Status da Nuvem & Conectar Celular">
                     <span class="cloud-dot online" id="cloudStatusDot"></span>
@@ -178,12 +178,6 @@
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                     </svg>
                     <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
-                </button>
-                <button class="btn-icon" id="btnOpenPerfilTop" title="Configurações do Perfil & Estúdio">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                    </svg>
                 </button>
                 <div class="notifications-dropdown" id="notificationsDropdown"></div>
             </div>
@@ -2000,16 +1994,23 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                         <span>3. Conta & Segurança (E-mail e Senha)</span>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="margin-bottom:12px;">
                         <label for="perfilEmail" style="font-size:0.75rem;">E-mail de Acesso</label>
                         <input type="email" id="perfilEmail" class="input-field" placeholder="seu-email@dominio.com" required>
                     </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label for="perfilSenhaAtual" style="font-size:0.75rem; font-weight:600; color:var(--text-secondary);">Senha Atual (obrigatória para trocar a senha)</label>
+                        <div class="password-input-wrap">
+                            <input type="password" id="perfilSenhaAtual" class="input-field" placeholder="Digite sua senha atual" autocomplete="current-password">
+                            <button type="button" class="btn-toggle-pass" id="btnTogglePerfilPassAtual" title="Mostrar/ocultar senha atual">👁️</button>
+                        </div>
+                    </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="perfilNovaSenha" style="font-size:0.75rem;">Nova Senha (opcional)</label>
+                            <label for="perfilNovaSenha" style="font-size:0.75rem;">Nova Senha</label>
                             <div class="password-input-wrap">
                                 <input type="password" id="perfilNovaSenha" class="input-field" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
-                                <button type="button" class="btn-toggle-pass" id="btnTogglePerfilPass" title="Mostrar/ocultar senha">👁️</button>
+                                <button type="button" class="btn-toggle-pass" id="btnTogglePerfilPass" title="Mostrar/ocultar nova senha">👁️</button>
                             </div>
                         </div>
                         <div class="form-group">
@@ -2018,7 +2019,7 @@
                         </div>
                     </div>
                     <small style="color:var(--text-tertiary); font-size:0.72rem; display:block; margin-top:4px;">
-                        💡 Deixe os campos de senha em branco se desejar manter a sua senha atual inalterada.
+                        💡 Para alterar a senha, informe obrigatoriamente a senha atual e defina a nova senha. Se desejar manter sua senha atual inalterada, deixe estes campos em branco.
                     </small>
                 </div>
 
@@ -2468,13 +2469,13 @@
 
     <!-- Scripts (order matters) -->
     <script src="js/firebase-config.js?v=3.3" onerror="this.onerror=null; this.src='js/firebase-config.example.js';"></script>
-    <script src="js/auth.js?v=3.8"></script>
+    <script src="js/auth.js?v=3.9"></script>
     <script src="js/storage.js?v=2.5"></script>
-    <script src="js/db.js?v=3.8"></script>
+    <script src="js/db.js?v=3.9"></script>
     <script src="js/pdf.js?v=2.5"></script>
     <script src="js/notifications.js?v=2.5"></script>
     <script src="js/whatsapp.js?v=2.6"></script>
     <script src="js/calculator.js?v=2.9"></script>
-    <script src="app.js?v=3.8"></script>
+    <script src="app.js?v=3.9"></script>
 </body>
 </html>

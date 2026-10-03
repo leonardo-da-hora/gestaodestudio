@@ -2077,14 +2077,24 @@ body.modal-open {
     }
 
     .top-bar-actions .btn-primary span,
-    .btn-topbar-calc span,
     #cloudStatusLabel {
         display: none !important;
     }
 
     .btn-topbar-calc {
-        padding: 8px 10px;
+        padding: 6px 10px;
+        gap: 5px;
         border-radius: var(--radius-sm);
+        display: inline-flex !important;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .btn-topbar-calc span {
+        display: inline-block !important;
+        font-size: 0.72rem;
+        font-weight: 700;
+        white-space: nowrap;
     }
 
     .btn-cloud-status {

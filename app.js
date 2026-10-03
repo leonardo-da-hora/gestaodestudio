@@ -4000,6 +4000,7 @@ async function openPerfilModal() {
         const elEndereco = document.getElementById('perfilEndereco');
         const elInsta = document.getElementById('perfilInstagram');
         const elPix = document.getElementById('perfilChavePix');
+        const elSenhaAtual = document.getElementById('perfilSenhaAtual');
         const elSenha = document.getElementById('perfilNovaSenha');
         const elConfSenha = document.getElementById('perfilConfirmarSenha');
 
@@ -4010,6 +4011,7 @@ async function openPerfilModal() {
         if (elEndereco) elEndereco.value = profile.endereco || '';
         if (elInsta) elInsta.value = profile.instagram || '';
         if (elPix) elPix.value = profile.chavePix || '';
+        if (elSenhaAtual) elSenhaAtual.value = '';
         if (elSenha) elSenha.value = '';
         if (elConfSenha) elConfSenha.value = '';
 
@@ -4044,6 +4046,7 @@ async function savePerfilStudio(e) {
     const endereco = document.getElementById('perfilEndereco')?.value.trim() || '';
     const instagram = document.getElementById('perfilInstagram')?.value.trim() || '';
     const chavePix = document.getElementById('perfilChavePix')?.value.trim() || '';
+    const senhaAtual = document.getElementById('perfilSenhaAtual')?.value.trim() || '';
     const novaSenha = document.getElementById('perfilNovaSenha')?.value.trim() || '';
     const confirmarSenha = document.getElementById('perfilConfirmarSenha')?.value.trim() || '';
 
@@ -4060,13 +4063,18 @@ async function savePerfilStudio(e) {
     }
 
     if (novaSenha) {
+        if (!senhaAtual) {
+            showToast('Informe a sua senha atual para poder trocar pela nova senha!', 'warning');
+            document.getElementById('perfilSenhaAtual')?.focus();
+            return;
+        }
         if (novaSenha.length < 6) {
             showToast('A nova senha deve ter no mínimo 6 caracteres!', 'warning');
             document.getElementById('perfilNovaSenha')?.focus();
             return;
         }
         if (novaSenha !== confirmarSenha) {
-            showToast('A confirmação de senha não confere!', 'warning');
+            showToast('A confirmação da nova senha não confere!', 'warning');
             document.getElementById('perfilConfirmarSenha')?.focus();
             return;
         }
@@ -4082,11 +4090,15 @@ async function savePerfilStudio(e) {
         const authRes = await Auth.updateProfileAndSecurity({
             name: nome,
             email: email,
+            currentPassword: senhaAtual,
             password: novaSenha
         });
 
         if (authRes.errors && authRes.errors.length > 0) {
-            showToast(authRes.errors.join(' | '), 'warning');
+            showToast(authRes.errors.join(' | '), 'error');
+            if (novaSenha && !authRes.passwordUpdated) {
+                return;
+            }
         }
 
         // 2. Salvar dados do estúdio no DataStore
@@ -4127,7 +4139,6 @@ async function savePerfilStudio(e) {
 window.savePerfilStudio = savePerfilStudio;
 
 function setupPerfilListeners() {
-    const btnOpenPerfilTop = document.getElementById('btnOpenPerfilTop');
     const btnOpenPerfilSidebar = document.getElementById('btnOpenPerfilSidebar');
     const userInfoClickable = document.getElementById('userInfoClickable');
     const navConfigPerfil = document.getElementById('nav-config-perfil');
@@ -4136,9 +4147,10 @@ function setupPerfilListeners() {
     const modalPerfilOverlay = document.getElementById('modalPerfilOverlay');
     const formPerfilStudio = document.getElementById('formPerfilStudio');
     const btnModalEditAvatar = document.getElementById('btnModalEditAvatar');
+    const btnTogglePerfilPassAtual = document.getElementById('btnTogglePerfilPassAtual');
     const btnTogglePerfilPass = document.getElementById('btnTogglePerfilPass');
 
-    [btnOpenPerfilTop, btnOpenPerfilSidebar, userInfoClickable, navConfigPerfil].forEach(el => {
+    [btnOpenPerfilSidebar, userInfoClickable, navConfigPerfil].forEach(el => {
         el?.addEventListener('click', (e) => {
             e.preventDefault();
             // Se mobile e sidebar aberta, fecha sidebar
@@ -4164,6 +4176,15 @@ function setupPerfilListeners() {
 
     btnModalEditAvatar?.addEventListener('click', () => {
         document.getElementById('avatarFileInput')?.click();
+    });
+
+    btnTogglePerfilPassAtual?.addEventListener('click', () => {
+        const passInput = document.getElementById('perfilSenhaAtual');
+        if (passInput) {
+            const isPass = passInput.type === 'password';
+            passInput.type = isPass ? 'text' : 'password';
+            btnTogglePerfilPassAtual.textContent = isPass ? '🙈' : '👁️';
+        }
     });
 
     btnTogglePerfilPass?.addEventListener('click', () => {

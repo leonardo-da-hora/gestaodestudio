@@ -184,7 +184,7 @@ const Auth = {
     },
 
     // ── Update Profile & Security Credentials ──
-    async updateProfileAndSecurity({ name, email, password }) {
+    async updateProfileAndSecurity({ name, email, currentPassword, password }) {
         const results = {
             nameUpdated: false,
             emailUpdated: false,
@@ -222,11 +222,68 @@ const Auth = {
             }
         }
 
-        // 2. Atualizar E-mail
+        // 2. Atualizar Senha (exige senha antiga/atual)
+        if (password && password.trim()) {
+            const cleanPass = password.trim();
+            const cleanCurrentPass = (currentPassword || '').trim();
+
+            if (!cleanCurrentPass) {
+                results.errors.push('A senha atual é obrigatória para poder cadastrar uma nova senha.');
+            } else if (cleanPass.length < 6) {
+                results.errors.push('A nova senha deve ter no mínimo 6 caracteres.');
+            } else {
+                if (!isDemo && auth.currentUser) {
+                    try {
+                        const userEmail = auth.currentUser.email || (this.currentUser && this.currentUser.email);
+                        if (userEmail && typeof firebase !== 'undefined' && firebase.auth) {
+                            const credential = firebase.auth.EmailAuthProvider.credential(userEmail, cleanCurrentPass);
+                            await auth.currentUser.reauthenticateWithCredential(credential);
+                        }
+                        await auth.currentUser.updatePassword(cleanPass);
+                        results.passwordUpdated = true;
+                    } catch (err) {
+                        console.warn('Erro ao atualizar senha no Firebase:', err);
+                        if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                            results.errors.push('A senha atual informada está incorreta.');
+                        } else {
+                            results.errors.push('Senha: ' + this._getErrorMessage(err.code));
+                        }
+                    }
+                } else {
+                    // Modo Demo: validar senha demo se existir
+                    const demoUserStr = localStorage.getItem('gh_demo_user');
+                    let passValid = true;
+                    if (demoUserStr) {
+                        try {
+                            const demoU = JSON.parse(demoUserStr);
+                            if (demoU.password && demoU.password !== cleanCurrentPass) {
+                                passValid = false;
+                            } else {
+                                demoU.password = cleanPass;
+                                localStorage.setItem('gh_demo_user', JSON.stringify(demoU));
+                            }
+                        } catch (e) {}
+                    }
+                    if (!passValid) {
+                        results.errors.push('A senha atual informada está incorreta.');
+                    } else {
+                        results.passwordUpdated = true;
+                    }
+                }
+            }
+        }
+
+        // 3. Atualizar E-mail
         if (email && email.trim() && (!this.currentUser || email.trim() !== this.currentUser.email)) {
             const cleanEmail = email.trim();
             if (!isDemo && auth.currentUser) {
                 try {
+                    if (currentPassword && currentPassword.trim() && typeof firebase !== 'undefined' && firebase.auth) {
+                        try {
+                            const credential = firebase.auth.EmailAuthProvider.credential(auth.currentUser.email, currentPassword.trim());
+                            await auth.currentUser.reauthenticateWithCredential(credential);
+                        } catch (reErr) {}
+                    }
                     if (typeof auth.currentUser.verifyBeforeUpdateEmail === 'function') {
                         await auth.currentUser.verifyBeforeUpdateEmail(cleanEmail);
                     } else {
@@ -251,26 +308,6 @@ const Auth = {
                     u.email = cleanEmail;
                     localStorage.setItem('gh_demo_user', JSON.stringify(u));
                 } catch (e) {}
-            }
-        }
-
-        // 3. Atualizar Senha
-        if (password && password.trim()) {
-            const cleanPass = password.trim();
-            if (cleanPass.length < 6) {
-                results.errors.push('A nova senha deve ter no mínimo 6 caracteres.');
-            } else {
-                if (!isDemo && auth.currentUser) {
-                    try {
-                        await auth.currentUser.updatePassword(cleanPass);
-                        results.passwordUpdated = true;
-                    } catch (err) {
-                        console.warn('Erro ao atualizar senha no Firebase:', err);
-                        results.errors.push('Senha: ' + this._getErrorMessage(err.code));
-                    }
-                } else {
-                    results.passwordUpdated = true;
-                }
             }
         }
 
