@@ -183,6 +183,100 @@ const Auth = {
         }
     },
 
+    // ── Update Profile & Security Credentials ──
+    async updateProfileAndSecurity({ name, email, password }) {
+        const results = {
+            nameUpdated: false,
+            emailUpdated: false,
+            passwordUpdated: false,
+            errors: []
+        };
+
+        const isDemo = IS_DEMO_MODE || typeof auth === 'undefined' || !auth || !auth.currentUser;
+
+        // 1. Atualizar Nome
+        if (name && name.trim()) {
+            const cleanName = name.trim();
+            if (!isDemo && auth.currentUser) {
+                try {
+                    await auth.currentUser.updateProfile({ displayName: cleanName });
+                    results.nameUpdated = true;
+                } catch (err) {
+                    console.warn('Erro ao atualizar displayName no Firebase:', err);
+                    results.errors.push('Nome: ' + this._getErrorMessage(err.code));
+                }
+            } else {
+                results.nameUpdated = true;
+            }
+
+            if (this.currentUser) {
+                this.currentUser.displayName = cleanName;
+            }
+            const demoUser = localStorage.getItem('gh_demo_user');
+            if (demoUser) {
+                try {
+                    const u = JSON.parse(demoUser);
+                    u.displayName = cleanName;
+                    localStorage.setItem('gh_demo_user', JSON.stringify(u));
+                } catch (e) {}
+            }
+        }
+
+        // 2. Atualizar E-mail
+        if (email && email.trim() && (!this.currentUser || email.trim() !== this.currentUser.email)) {
+            const cleanEmail = email.trim();
+            if (!isDemo && auth.currentUser) {
+                try {
+                    if (typeof auth.currentUser.verifyBeforeUpdateEmail === 'function') {
+                        await auth.currentUser.verifyBeforeUpdateEmail(cleanEmail);
+                    } else {
+                        await auth.currentUser.updateEmail(cleanEmail);
+                    }
+                    results.emailUpdated = true;
+                } catch (err) {
+                    console.warn('Erro ao atualizar email no Firebase:', err);
+                    results.errors.push('E-mail: ' + this._getErrorMessage(err.code));
+                }
+            } else {
+                results.emailUpdated = true;
+            }
+
+            if (this.currentUser) {
+                this.currentUser.email = cleanEmail;
+            }
+            const demoUser = localStorage.getItem('gh_demo_user');
+            if (demoUser) {
+                try {
+                    const u = JSON.parse(demoUser);
+                    u.email = cleanEmail;
+                    localStorage.setItem('gh_demo_user', JSON.stringify(u));
+                } catch (e) {}
+            }
+        }
+
+        // 3. Atualizar Senha
+        if (password && password.trim()) {
+            const cleanPass = password.trim();
+            if (cleanPass.length < 6) {
+                results.errors.push('A nova senha deve ter no mínimo 6 caracteres.');
+            } else {
+                if (!isDemo && auth.currentUser) {
+                    try {
+                        await auth.currentUser.updatePassword(cleanPass);
+                        results.passwordUpdated = true;
+                    } catch (err) {
+                        console.warn('Erro ao atualizar senha no Firebase:', err);
+                        results.errors.push('Senha: ' + this._getErrorMessage(err.code));
+                    }
+                } else {
+                    results.passwordUpdated = true;
+                }
+            }
+        }
+
+        return results;
+    },
+
     // ── Logout ──
     async logout() {
         localStorage.removeItem('gh_demo_user');

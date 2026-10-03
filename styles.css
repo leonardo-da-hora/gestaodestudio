@@ -5919,4 +5919,97 @@ tr:hover .row-actions,
     }
 }
 
+/* =========================================================
+   PERFIL & STUDIO SETTINGS MODAL
+   ========================================================= */
+.perfil-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: rgba(245, 197, 24, 0.14);
+    border: 1px solid rgba(245, 197, 24, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold);
+    flex-shrink: 0;
+}
+
+.perfil-card-section {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+}
+
+.perfil-avatar-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.perfil-modal-avatar-wrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+}
+
+.perfil-modal-avatar-wrap .user-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    font-size: 1.4rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    overflow: hidden;
+}
+
+.perfil-modal-avatar-wrap .user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.password-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.password-input-wrap .input-field {
+    padding-right: 42px;
+}
+
+.btn-toggle-pass {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.05rem;
+    padding: 6px;
+    opacity: 0.65;
+    transition: opacity var(--transition-fast);
+}
+
+.btn-toggle-pass:hover {
+    opacity: 1;
+}
+
+.user-info[title] {
+    transition: opacity var(--transition-fast);
+}
+
+.user-info[title]:hover {
+    opacity: 0.85;
+}
+
 

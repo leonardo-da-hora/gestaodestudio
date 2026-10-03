@@ -3575,6 +3575,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // User logged in
             document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
             
+            // Load Studio Profile name & role
+            try {
+                const studioProf = await DataStore.getStudioProfile();
+                if (studioProf) {
+                    if (studioProf.nomeArtista) {
+                        document.getElementById('userName').textContent = studioProf.nomeArtista;
+                    }
+                    const studioRoleEl = document.getElementById('userStudioRole');
+                    if (studioRoleEl) {
+                        studioRoleEl.textContent = studioProf.nomeEstudio || 'GH Studio';
+                    }
+                }
+            } catch (pErr) {}
+
             // Restore avatar if custom photo exists
             const savedAvatar = localStorage.getItem('gh_avatar_' + user.uid) || localStorage.getItem('gh_avatar_current') || user.photoURL;
             if (savedAvatar) {
@@ -3655,6 +3669,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const userAvatarEl = document.getElementById('userAvatar');
             if (userAvatarEl) {
                 userAvatarEl.innerHTML = `<img src="${base64}" class="user-avatar-img" alt="Avatar">`;
+            }
+            const modalPerfilAvatar = document.getElementById('modalPerfilAvatar');
+            if (modalPerfilAvatar) {
+                modalPerfilAvatar.innerHTML = `<img src="${base64}" class="user-avatar-img" alt="Avatar">`;
             }
 
             // Obtain current user safely without throwing
@@ -3962,4 +3980,202 @@ function setupPwaAndMobileConnect() {
         if (instIos) instIos.style.display = 'none';
     });
 }
+
+// =========================================================
+// PERFIL & STUDIO SETTINGS MANAGEMENT
+// =========================================================
+
+async function openPerfilModal() {
+    const modal = document.getElementById('modalPerfilOverlay');
+    if (!modal) return;
+
+    try {
+        const profile = await DataStore.getStudioProfile();
+        const curUser = (typeof Auth !== 'undefined' && Auth.currentUser) ? Auth.currentUser : null;
+
+        const elNome = document.getElementById('perfilNome');
+        const elEmail = document.getElementById('perfilEmail');
+        const elEstudio = document.getElementById('perfilNomeEstudio');
+        const elTelefone = document.getElementById('perfilTelefone');
+        const elEndereco = document.getElementById('perfilEndereco');
+        const elInsta = document.getElementById('perfilInstagram');
+        const elPix = document.getElementById('perfilChavePix');
+        const elSenha = document.getElementById('perfilNovaSenha');
+        const elConfSenha = document.getElementById('perfilConfirmarSenha');
+
+        if (elNome) elNome.value = profile.nomeArtista || curUser?.displayName || '';
+        if (elEmail) elEmail.value = profile.email || curUser?.email || '';
+        if (elEstudio) elEstudio.value = profile.nomeEstudio || 'GH Studio';
+        if (elTelefone) elTelefone.value = profile.telefone || '';
+        if (elEndereco) elEndereco.value = profile.endereco || '';
+        if (elInsta) elInsta.value = profile.instagram || '';
+        if (elPix) elPix.value = profile.chavePix || '';
+        if (elSenha) elSenha.value = '';
+        if (elConfSenha) elConfSenha.value = '';
+
+        // Avatar preview inside modal
+        const modalAvatar = document.getElementById('modalPerfilAvatar');
+        const currentAvatar = localStorage.getItem('gh_avatar_' + (curUser?.uid || 'default')) || localStorage.getItem('gh_avatar_current') || curUser?.photoURL;
+        if (modalAvatar) {
+            if (currentAvatar) {
+                modalAvatar.innerHTML = `<img src="${currentAvatar}" class="user-avatar-img" alt="Avatar">`;
+            } else {
+                modalAvatar.textContent = getInitials(profile.nomeArtista || curUser?.displayName || 'G');
+            }
+        }
+
+        openModal(modal);
+    } catch (err) {
+        console.error('Erro ao abrir perfil modal:', err);
+        openModal(modal);
+    }
+}
+window.openPerfilModal = openPerfilModal;
+
+async function savePerfilStudio(e) {
+    if (e) e.preventDefault();
+    const btnSave = document.getElementById('btnSavePerfil');
+    const originalText = btnSave ? btnSave.innerHTML : 'Salvar Alterações';
+
+    const nome = document.getElementById('perfilNome')?.value.trim();
+    const email = document.getElementById('perfilEmail')?.value.trim();
+    const nomeEstudio = document.getElementById('perfilNomeEstudio')?.value.trim() || 'GH Studio';
+    const telefone = document.getElementById('perfilTelefone')?.value.trim() || '';
+    const endereco = document.getElementById('perfilEndereco')?.value.trim() || '';
+    const instagram = document.getElementById('perfilInstagram')?.value.trim() || '';
+    const chavePix = document.getElementById('perfilChavePix')?.value.trim() || '';
+    const novaSenha = document.getElementById('perfilNovaSenha')?.value.trim() || '';
+    const confirmarSenha = document.getElementById('perfilConfirmarSenha')?.value.trim() || '';
+
+    if (!nome) {
+        showToast('Informe o seu nome completo ou artístico!', 'warning');
+        document.getElementById('perfilNome')?.focus();
+        return;
+    }
+
+    if (!email) {
+        showToast('Informe um endereço de e-mail válido!', 'warning');
+        document.getElementById('perfilEmail')?.focus();
+        return;
+    }
+
+    if (novaSenha) {
+        if (novaSenha.length < 6) {
+            showToast('A nova senha deve ter no mínimo 6 caracteres!', 'warning');
+            document.getElementById('perfilNovaSenha')?.focus();
+            return;
+        }
+        if (novaSenha !== confirmarSenha) {
+            showToast('A confirmação de senha não confere!', 'warning');
+            document.getElementById('perfilConfirmarSenha')?.focus();
+            return;
+        }
+    }
+
+    try {
+        if (btnSave) {
+            btnSave.disabled = true;
+            btnSave.innerHTML = `<span>Salvando...</span>`;
+        }
+
+        // 1. Atualizar credenciais de autenticação
+        const authRes = await Auth.updateProfileAndSecurity({
+            name: nome,
+            email: email,
+            password: novaSenha
+        });
+
+        if (authRes.errors && authRes.errors.length > 0) {
+            showToast(authRes.errors.join(' | '), 'warning');
+        }
+
+        // 2. Salvar dados do estúdio no DataStore
+        await DataStore.setStudioProfile({
+            nomeArtista: nome,
+            email: email,
+            nomeEstudio: nomeEstudio,
+            telefone: telefone,
+            endereco: endereco,
+            instagram: instagram,
+            chavePix: chavePix
+        });
+
+        // 3. Atualizar elementos visuais
+        const userNameEl = document.getElementById('userName');
+        if (userNameEl) userNameEl.textContent = nome;
+
+        const userStudioRole = document.getElementById('userStudioRole');
+        if (userStudioRole) userStudioRole.textContent = nomeEstudio;
+
+        closeModal(document.getElementById('modalPerfilOverlay'));
+        showToast('Perfil e configurações do estúdio atualizados com sucesso! ⚡', 'success');
+
+        // Se a senha foi alterada
+        if (authRes.passwordUpdated) {
+            showToast('Senha de acesso atualizada com sucesso! 🔒', 'info');
+        }
+    } catch (err) {
+        console.error('Erro ao salvar perfil:', err);
+        showToast('Erro ao salvar perfil: ' + (err.message || 'Tente novamente'), 'error');
+    } finally {
+        if (btnSave) {
+            btnSave.disabled = false;
+            btnSave.innerHTML = originalText;
+        }
+    }
+}
+window.savePerfilStudio = savePerfilStudio;
+
+function setupPerfilListeners() {
+    const btnOpenPerfilTop = document.getElementById('btnOpenPerfilTop');
+    const btnOpenPerfilSidebar = document.getElementById('btnOpenPerfilSidebar');
+    const userInfoClickable = document.getElementById('userInfoClickable');
+    const navConfigPerfil = document.getElementById('nav-config-perfil');
+    const btnCancelPerfil = document.getElementById('btnCancelPerfil');
+    const modalPerfilClose = document.getElementById('modalPerfilClose');
+    const modalPerfilOverlay = document.getElementById('modalPerfilOverlay');
+    const formPerfilStudio = document.getElementById('formPerfilStudio');
+    const btnModalEditAvatar = document.getElementById('btnModalEditAvatar');
+    const btnTogglePerfilPass = document.getElementById('btnTogglePerfilPass');
+
+    [btnOpenPerfilTop, btnOpenPerfilSidebar, userInfoClickable, navConfigPerfil].forEach(el => {
+        el?.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Se mobile e sidebar aberta, fecha sidebar
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            if (sidebar && sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                sidebarOverlay?.classList.remove('active');
+            }
+            openPerfilModal();
+        });
+    });
+
+    [btnCancelPerfil, modalPerfilClose].forEach(el => {
+        el?.addEventListener('click', () => closeModal(modalPerfilOverlay));
+    });
+
+    modalPerfilOverlay?.addEventListener('click', (e) => {
+        if (e.target === modalPerfilOverlay) closeModal(modalPerfilOverlay);
+    });
+
+    formPerfilStudio?.addEventListener('submit', savePerfilStudio);
+
+    btnModalEditAvatar?.addEventListener('click', () => {
+        document.getElementById('avatarFileInput')?.click();
+    });
+
+    btnTogglePerfilPass?.addEventListener('click', () => {
+        const passInput = document.getElementById('perfilNovaSenha');
+        const confInput = document.getElementById('perfilConfirmarSenha');
+        if (passInput) {
+            const isPass = passInput.type === 'password';
+            passInput.type = isPass ? 'text' : 'password';
+            if (confInput) confInput.type = isPass ? 'text' : 'password';
+            btnTogglePerfilPass.textContent = isPass ? '🙈' : '👁️';
+        }
+    });
+}
+setupPerfilListeners();
 

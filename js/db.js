@@ -851,6 +851,59 @@ const DataStore = {
         return config;
     },
 
+    // ── Perfil do Usuário & Informações do Estúdio ──
+    async getStudioProfile() {
+        let profile = {};
+        const local = localStorage.getItem('gh_studio_profile');
+        if (local) {
+            try { profile = JSON.parse(local); } catch (e) {}
+        }
+        try {
+            const dbProf = await this._getDB().getById('configuracoes', 'studio_profile');
+            if (dbProf) {
+                profile = { ...profile, ...dbProf };
+            }
+        } catch (e) {}
+
+        const waConfig = await this.getWhatsAppConfig();
+        const curUser = (typeof Auth !== 'undefined' && Auth.currentUser) ? Auth.currentUser : null;
+
+        return {
+            nomeArtista: profile.nomeArtista || curUser?.displayName || 'Tatuador(a)',
+            email: profile.email || curUser?.email || '',
+            nomeEstudio: profile.nomeEstudio || waConfig.nomeEstudio || 'GH Studio',
+            telefone: profile.telefone || waConfig.telefoneEstudio || '',
+            endereco: profile.endereco || waConfig.enderecoEstudio || '',
+            instagram: profile.instagram || waConfig.instagram || '@ghstudio',
+            chavePix: profile.chavePix || waConfig.chavePix || ''
+        };
+    },
+
+    async setStudioProfile(data) {
+        localStorage.setItem('gh_studio_profile', JSON.stringify(data));
+        try {
+            const existing = await this._getDB().getById('configuracoes', 'studio_profile');
+            if (existing) {
+                await this._getDB().update('configuracoes', 'studio_profile', data);
+            } else {
+                await this._getDB().add('configuracoes', { id: 'studio_profile', ...data });
+            }
+        } catch (e) {}
+
+        // Sincronizar com whatsapp config
+        try {
+            await this.setWhatsAppConfig({
+                nomeEstudio: data.nomeEstudio,
+                telefoneEstudio: data.telefone,
+                enderecoEstudio: data.endereco,
+                instagram: data.instagram,
+                chavePix: data.chavePix
+            });
+        } catch (e) {}
+
+        return data;
+    },
+
     // ── Orçamentos Inacabados / Consultas ──
     async getOrcamentos() {
         try {
