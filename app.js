@@ -3789,6 +3789,11 @@ function setupPwaAndMobileConnect() {
     const instIos = document.getElementById('instrucoesIos');
     const instAndroid = document.getElementById('instrucoesAndroid');
 
+    const tabModoInstalar = document.getElementById('tabModoInstalar');
+    const tabModoQr = document.getElementById('tabModoQr');
+    const secInstalarDirect = document.getElementById('secInstalarDirect');
+    const secQrCode = document.getElementById('secQrCode');
+
     const appUrl = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1'))
         ? 'https://gh-studio-gestao.web.app'
         : window.location.origin;
@@ -3805,8 +3810,8 @@ function setupPwaAndMobileConnect() {
             try {
                 new QRCode(qrContainer, {
                     text: appUrl,
-                    width: 170,
-                    height: 170,
+                    width: 130,
+                    height: 130,
                     colorDark: '#0A0A0B',
                     colorLight: '#FFFFFF',
                     correctLevel: QRCode.CorrectLevel.M
@@ -3819,18 +3824,70 @@ function setupPwaAndMobileConnect() {
         }
         // Fallback to QR server API image
         const img = document.createElement('img');
-        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(appUrl)}`;
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(appUrl)}`;
         img.alt = 'QR Code para acesso mobile';
-        img.style.width = '170px';
-        img.style.height = '170px';
+        img.style.width = '130px';
+        img.style.height = '130px';
         img.style.display = 'block';
         img.style.borderRadius = '8px';
         qrContainer.appendChild(img);
         qrGenerated = true;
     }
 
+    // Direct PWA install prompt button
+    let deferredPwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPwaPrompt = e;
+        const pwaWrap = document.getElementById('pwaInstallPromptWrap');
+        if (pwaWrap) pwaWrap.style.display = 'block';
+    });
+
+    document.getElementById('btnTriggerPwaInstall')?.addEventListener('click', async () => {
+        if (deferredPwaPrompt) {
+            deferredPwaPrompt.prompt();
+            const { outcome } = await deferredPwaPrompt.userChoice;
+            if (outcome === 'accepted') {
+                showToast('Aplicativo instalado com sucesso no seu aparelho!', 'success');
+                if (modalConnectMobile) closeModal(modalConnectMobile);
+            }
+            deferredPwaPrompt = null;
+        } else {
+            showToast('Para instalar agora, siga os passos abaixo do seu navegador!', 'info');
+        }
+    });
+
     const openConnectModal = () => {
-        renderQrCode();
+        const isMobile = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+        const isAndroid = /android/i.test(navigator.userAgent);
+
+        // Pre-configure mode tabs
+        if (isMobile) {
+            tabModoInstalar?.classList.add('active');
+            tabModoQr?.classList.remove('active');
+            if (secInstalarDirect) secInstalarDirect.style.display = 'block';
+            if (secQrCode) secQrCode.style.display = 'none';
+        } else {
+            tabModoQr?.classList.add('active');
+            tabModoInstalar?.classList.remove('active');
+            if (secQrCode) secQrCode.style.display = 'block';
+            if (secInstalarDirect) secInstalarDirect.style.display = 'none';
+            renderQrCode();
+        }
+
+        // Pre-configure OS tabs (Android default for Galaxy/Android)
+        if (isAndroid) {
+            tabAndroid?.classList.add('active');
+            tabIos?.classList.remove('active');
+            if (instAndroid) instAndroid.style.display = 'block';
+            if (instIos) instIos.style.display = 'none';
+        } else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+            tabIos?.classList.add('active');
+            tabAndroid?.classList.remove('active');
+            if (instIos) instIos.style.display = 'block';
+            if (instAndroid) instAndroid.style.display = 'none';
+        }
+
         openModal(modalConnectMobile);
     };
 
@@ -3863,7 +3920,23 @@ function setupPwaAndMobileConnect() {
         }
     });
 
-    // Instructions Tab Switching
+    // Main Mode Switcher
+    tabModoInstalar?.addEventListener('click', () => {
+        tabModoInstalar.classList.add('active');
+        tabModoQr?.classList.remove('active');
+        if (secInstalarDirect) secInstalarDirect.style.display = 'block';
+        if (secQrCode) secQrCode.style.display = 'none';
+    });
+
+    tabModoQr?.addEventListener('click', () => {
+        tabModoQr.classList.add('active');
+        tabModoInstalar?.classList.remove('active');
+        if (secQrCode) secQrCode.style.display = 'block';
+        if (secInstalarDirect) secInstalarDirect.style.display = 'none';
+        renderQrCode();
+    });
+
+    // Instructions OS Tab Switching
     tabIos?.addEventListener('click', () => {
         tabIos.classList.add('active');
         tabAndroid?.classList.remove('active');
